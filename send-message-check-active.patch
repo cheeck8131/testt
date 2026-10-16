@@ -1,0 +1,1614 @@
+From 18f6b652c43e261dfae0d9aa5d0d4f61bc40f64b Mon Sep 17 00:00:00 2001
+From: cheeck <dev>
+Date: Fri, 16 Oct 2026 15:17:10 +0300
+Subject: [PATCH] =?UTF-8?q?feat(send-message):=20=D0=BF=D1=80=D0=BE=D0=B2?=
+ =?UTF-8?q?=D0=B5=D1=80=D0=BA=D0=B0=20=D0=B0=D0=BA=D1=82=D0=B8=D0=B2=D0=BD?=
+ =?UTF-8?q?=D0=BE=D1=81=D1=82=D0=B8=20checkActive=20=D0=B8=20=D0=BE=D0=B1?=
+ =?UTF-8?q?=D1=89=D0=B8=D0=B9=20action=20inline-=D0=B2=D0=B8=D0=B4=D0=B6?=
+ =?UTF-8?q?=D0=B5=D1=82=D0=BE=D0=B2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- SendMessage: опциональное поле checkActive (methodName, methodParams) —
+  проверка активности через externalMethod хоста. Пока идёт запрос, действие
+  неактивно; неактивно только при ответе false / "false". Без getExternalMethod,
+  при ошибке, ненайденном методе или непонятном ответе — активно. После
+  выполнения action проверка повторяется
+- SendMessage: поля message и content заменены на action (breaking payload,
+  виджет alpha). Без action в чат отправляется text
+- SendMessage: в describe inactiveAfterSend указано, что состояние не
+  сохраняется после перезахода; для сохранения — checkActive
+- Link: опциональный action переопределяет переход по url
+- InlineElement: InlineActionSchema и normalizeInlineAction вынесены из inline
+  в общий part, нормализатор принимает from и inputType. Контракт inline
+  не изменился
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/parts/inline-element/CHANGELOG.md         |  10 +
+ src/parts/inline-element/index.ts             |   5 +-
+ .../inline-element/inline-action.ts}          |  31 ++-
+ .../inline-element/inline-element.schema.ts   |  59 +++++
+ src/widgets/inline/inline.schema.ts           |  57 +----
+ src/widgets/inline/inline.test.tsx            |  10 +-
+ src/widgets/inline/inline.tsx                 |   4 +-
+ src/widgets/link/CHANGELOG.md                 |  10 +
+ src/widgets/link/README.md                    |  27 ++-
+ src/widgets/link/link.examples.ts             |  19 ++
+ src/widgets/link/link.meta.ts                 |   3 +-
+ src/widgets/link/link.schema.ts               |   8 +-
+ src/widgets/link/link.stories.tsx             |   1 +
+ src/widgets/link/link.test.tsx                |  39 ++++
+ src/widgets/link/link.tsx                     |  16 +-
+ src/widgets/send-message/CHANGELOG.md         |  20 ++
+ src/widgets/send-message/README.md            |  71 +++++-
+ .../hooks/use-check-active.test.ts            | 105 +++++++++
+ .../send-message/hooks/use-check-active.ts    | 100 ++++++++
+ .../send-message/send-message.examples.ts     |  70 +++++-
+ src/widgets/send-message/send-message.meta.ts |   6 +-
+ .../send-message/send-message.schema.ts       |  52 ++++-
+ .../send-message/send-message.stories.tsx     |  75 +++++-
+ .../send-message/send-message.test.tsx        | 220 +++++++++++++++++-
+ src/widgets/send-message/send-message.tsx     |  45 +++-
+ 25 files changed, 935 insertions(+), 128 deletions(-)
+ rename src/{widgets/inline/inline.actions.ts => parts/inline-element/inline-action.ts} (56%)
+ create mode 100644 src/widgets/send-message/hooks/use-check-active.test.ts
+ create mode 100644 src/widgets/send-message/hooks/use-check-active.ts
+
+diff --git a/src/parts/inline-element/CHANGELOG.md b/src/parts/inline-element/CHANGELOG.md
+index d488a29..b5217e8 100644
+--- a/src/parts/inline-element/CHANGELOG.md
++++ b/src/parts/inline-element/CHANGELOG.md
+@@ -1,5 +1,15 @@
+ # Change Log — inline-element
+ 
++## Вынесли общий action inline-виджетов
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++Схема действия по нажатию `InlineActionSchema` (`message`, `deeplink`, `externalMethod` и legacy-алиас `sendMessage`) и нормализатор `normalizeInlineAction` переехали из виджета `inline` в `inline-element`. Теперь это общий контракт виджетов `inline`, `link` и `send-message`. Нормализатор принимает имя виджета (`from`) и опциональный `inputType` для сообщений. Контракт `inline` не изменился.
++
+ ## Добавили базовый строчный элемент для inline-виджетов
+ ---
+ introduced: auto
+diff --git a/src/parts/inline-element/index.ts b/src/parts/inline-element/index.ts
+index eb51889..949aa98 100644
+--- a/src/parts/inline-element/index.ts
++++ b/src/parts/inline-element/index.ts
+@@ -1,4 +1,5 @@
+-// Zod-схема иконки импортируется напрямую из ./inline-element.schema, чтобы не попадать в runtime-чанки виджетов
++// Zod-схемы иконки и action импортируются напрямую из ./inline-element.schema, чтобы не попадать в runtime-чанки виджетов
+ export { InlineElement, type InlineElementProps } from './inline-element'
+ export { InlineIcon } from './inline-icon'
+-export type { InlineIconData } from './inline-element.schema'
++export { normalizeInlineAction, type NormalizeInlineActionOptions } from './inline-action'
++export type { InlineAction, InlineIconData } from './inline-element.schema'
+diff --git a/src/widgets/inline/inline.actions.ts b/src/parts/inline-element/inline-action.ts
+similarity index 56%
+rename from src/widgets/inline/inline.actions.ts
+rename to src/parts/inline-element/inline-action.ts
+index fea9b88..7758c44 100644
+--- a/src/widgets/inline/inline.actions.ts
++++ b/src/parts/inline-element/inline-action.ts
+@@ -1,6 +1,8 @@
+-import { type SystemAction } from '#/hooks/use-system-actions'
++// Только типы: runtime-код хуков и zod-схема не должны попадать в чанки виджетов через этот модуль
++import type { InputType } from '#/hooks/use-send-message'
++import type { SystemAction } from '#/hooks/use-system-actions'
+ 
+-import { type InlineAction } from './inline.schema'
++import type { InlineAction } from './inline-element.schema'
+ 
+ type InlineActionType = InlineAction['type']
+ type SystemActionType = SystemAction['type']
+@@ -12,6 +14,13 @@ type InlineExternalMethodCallbackType = NonNullable<
+     InlineExternalMethodAction['payload']['externalMethodSettings']['callbackType']
+ >
+ 
++export type NormalizeInlineActionOptions = {
++    /** Имя виджета: попадает в from системного действия и в name function_results сообщения */
++    from: string
++    /** Тип ввода для действия message. Если не передан, useSendMessage подставит значение по умолчанию */
++    inputType?: InputType
++}
++
+ const ACTION_TYPE_MAP: Record<InlineActionType, SystemActionType> = {
+     message: 'message',
+     sendMessage: 'message',
+@@ -27,7 +36,11 @@ const CALLBACK_TYPE_MAP: Record<InlineExternalMethodCallbackType, SystemExternal
+     externalMethod: 'externalMethod'
+ }
+ 
+-export const normalizeInlineAction = (inlineAction: InlineAction): SystemAction => {
++/** Приводит action inline-виджета к системному действию useSystemActions */
++export const normalizeInlineAction = (
++    inlineAction: InlineAction,
++    { from, inputType }: NormalizeInlineActionOptions
++): SystemAction => {
+     const type = ACTION_TYPE_MAP[inlineAction.type]
+ 
+     if (inlineAction.type === 'externalMethod') {
+@@ -35,7 +48,7 @@ export const normalizeInlineAction = (inlineAction: InlineAction): SystemAction
+ 
+         return {
+             type,
+-            from: 'inline',
++            from,
+             payload: {
+                 ...inlineAction.payload,
+                 externalMethodSettings: {
+@@ -46,9 +59,17 @@ export const normalizeInlineAction = (inlineAction: InlineAction): SystemAction
+         } as SystemAction
+     }
+ 
++    if (type === 'message' && inputType) {
++        return {
++            type,
++            from,
++            payload: { ...inlineAction.payload, inputType }
++        } as SystemAction
++    }
++
+     return {
+         type,
+-        from: 'inline',
++        from,
+         payload: inlineAction.payload
+     } as SystemAction
+ }
+diff --git a/src/parts/inline-element/inline-element.schema.ts b/src/parts/inline-element/inline-element.schema.ts
+index 2b25fb1..1bcadb1 100644
+--- a/src/parts/inline-element/inline-element.schema.ts
++++ b/src/parts/inline-element/inline-element.schema.ts
+@@ -18,3 +18,62 @@ const InlineIconByNameSchema = z.object({
+ export const InlineIconSchema = z.discriminatedUnion('type', [InlineIconByUrlSchema, InlineIconByNameSchema])
+ 
+ export type InlineIconData = z.infer<typeof InlineIconSchema>
++
++const ArbitraryObjectSchema = z.object({}).passthrough()
++
++const MessageAction = z.object({
++    type: z.literal('message'),
++    payload: z.object({
++        text: z.string().describe('Текст сообщения, которое будет отправлено в чат'),
++        content: z.string().optional().nullable().describe('Опциональный content для function_results')
++    })
++})
++
++const LegacySendMessageAction = z.object({
++    type: z.literal('sendMessage'),
++    payload: z.object({
++        text: z.string().describe('Текст сообщения, которое будет отправлено в чат'),
++        content: z.string().optional().nullable().describe('Опциональный content для function_results')
++    })
++})
++
++const DeeplinkAction = z.object({
++    type: z.literal('deeplink'),
++    payload: z.object({
++        url: z.string().describe('URL или deeplink для открытия')
++    })
++})
++
++const ExternalMethodAction = z.object({
++    type: z.literal('externalMethod'),
++    payload: z.object({
++        externalMethodSettings: z.object({
++            methodName: z.string().describe('Название внешнего метода'),
++            methodParams: ArbitraryObjectSchema.describe('Параметры внешнего метода'),
++            callbackType: z
++                .enum([
++                    'none',
++                    'message',
++                    'deeplink',
++                    'externalMethod',
++                    'sendMessage'
++                ])
++                .optional()
++                .default('none')
++                .describe('Тип callback-действия после выполнения внешнего метода')
++        })
++    })
++})
++
++/**
++ * Действие по нажатию на inline-виджет: message, deeplink или externalMethod.
++ * Общий контракт виджетов inline, link и send-message; legacy-тип sendMessage сохранён как алиас message
++ */
++export const InlineActionSchema = z.discriminatedUnion('type', [
++    MessageAction,
++    LegacySendMessageAction,
++    DeeplinkAction,
++    ExternalMethodAction
++])
++
++export type InlineAction = z.infer<typeof InlineActionSchema>
+diff --git a/src/widgets/inline/inline.schema.ts b/src/widgets/inline/inline.schema.ts
+index 6d27a33..8c6a23b 100644
+--- a/src/widgets/inline/inline.schema.ts
++++ b/src/widgets/inline/inline.schema.ts
+@@ -1,59 +1,11 @@
+ import { z } from 'zod'
+ 
++import { InlineActionSchema } from '#/parts/inline-element/inline-element.schema'
+ import { SYSTEM_ICON_NAMES } from '#/parts/system-icon/icon-registry'
+ 
+-const ArbitraryObjectSchema = z.object({}).passthrough()
+-
+-const MessageAction = z.object({
+-    type: z.literal('message'),
+-    payload: z.object({
+-        text: z.string().describe('Текст сообщения, которое будет отправлено в чат'),
+-        content: z.string().optional().nullable().describe('Опциональный content для function_results')
+-    })
+-})
+-
+-const LegacySendMessageAction = z.object({
+-    type: z.literal('sendMessage'),
+-    payload: z.object({
+-        text: z.string().describe('Текст сообщения, которое будет отправлено в чат'),
+-        content: z.string().optional().nullable().describe('Опциональный content для function_results')
+-    })
+-})
+-
+-const DeeplinkAction = z.object({
+-    type: z.literal('deeplink'),
+-    payload: z.object({
+-        url: z.string().describe('URL или deeplink для открытия')
+-    })
+-})
+-
+-const ExternalMethodAction = z.object({
+-    type: z.literal('externalMethod'),
+-    payload: z.object({
+-        externalMethodSettings: z.object({
+-            methodName: z.string().describe('Название внешнего метода'),
+-            methodParams: ArbitraryObjectSchema.describe('Параметры внешнего метода'),
+-            callbackType: z
+-                .enum([
+-                    'none',
+-                    'message',
+-                    'deeplink',
+-                    'externalMethod',
+-                    'sendMessage'
+-                ])
+-                .optional()
+-                .default('none')
+-                .describe('Тип callback-действия после выполнения внешнего метода')
+-        })
+-    })
+-})
+-
+-export const InlineActionSchema = z.discriminatedUnion('type', [
+-    MessageAction,
+-    LegacySendMessageAction,
+-    DeeplinkAction,
+-    ExternalMethodAction
+-])
++// Схема action общая для inline-виджетов и живёт в parts/inline-element
++export { InlineActionSchema }
++export type { InlineAction } from '#/parts/inline-element/inline-element.schema'
+ 
+ const IconByUrl = z.object({
+     type: z.literal('url'),
+@@ -83,5 +35,4 @@ export const PayloadDataSchema = z
+             'Для kind=Neutral при наличии action и отсутствии ticker автоматически показывает нижнюю линию.'
+     )
+ 
+-export type InlineAction = z.infer<typeof InlineActionSchema>
+ export type PayloadData = z.infer<typeof PayloadDataSchema>
+diff --git a/src/widgets/inline/inline.test.tsx b/src/widgets/inline/inline.test.tsx
+index 25e6b2d..16ea5b3 100644
+--- a/src/widgets/inline/inline.test.tsx
++++ b/src/widgets/inline/inline.test.tsx
+@@ -2,7 +2,7 @@ import { fireEvent, render } from '@testing-library/react'
+ import { describe, expect, it } from 'vitest'
+ 
+ import Inline from './inline'
+-import { normalizeInlineAction } from './inline.actions'
++import { normalizeInlineAction } from '#/parts/inline-element/inline-action'
+ import { examples } from './inline.examples'
+ import { InlineActionSchema, type InlineAction } from './inline.schema'
+ 
+@@ -65,7 +65,7 @@ describe('normalizeInlineAction', () => {
+             }
+         }
+ 
+-        expect(normalizeInlineAction(action)).toEqual({
++        expect(normalizeInlineAction(action, { from: 'inline' })).toEqual({
+             type: 'message',
+             from: 'inline',
+             payload: action.payload
+@@ -80,7 +80,7 @@ describe('normalizeInlineAction', () => {
+             }
+         }
+ 
+-        expect(normalizeInlineAction(action)).toEqual({
++        expect(normalizeInlineAction(action, { from: 'inline' })).toEqual({
+             type: 'deeplink',
+             from: 'inline',
+             payload: action.payload
+@@ -98,7 +98,7 @@ describe('normalizeInlineAction', () => {
+             }
+         } as InlineAction
+ 
+-        expect(normalizeInlineAction(action)).toEqual({
++        expect(normalizeInlineAction(action, { from: 'inline' })).toEqual({
+             type: 'externalMethod',
+             from: 'inline',
+             payload: {
+@@ -123,7 +123,7 @@ describe('normalizeInlineAction', () => {
+             }
+         }
+ 
+-        expect(normalizeInlineAction(action)).toEqual({
++        expect(normalizeInlineAction(action, { from: 'inline' })).toEqual({
+             type: 'externalMethod',
+             from: 'inline',
+             payload: {
+diff --git a/src/widgets/inline/inline.tsx b/src/widgets/inline/inline.tsx
+index b7fe5d1..601a22f 100644
+--- a/src/widgets/inline/inline.tsx
++++ b/src/widgets/inline/inline.tsx
+@@ -12,7 +12,7 @@ import {
+ import { useWidgetActive, useSystemActions } from '#/hooks'
+ import { IconLoader, getSystemIconComponent, type SystemIconNames } from '#/parts'
+ import { widget, type Widget } from '#/system'
+-import { normalizeInlineAction } from './inline.actions'
++import { normalizeInlineAction } from '#/parts/inline-element/inline-action'
+ import OldStyles from './inline.module.css'
+ import NewStyles from './inline.new.module.css'
+ import { type InlineAction, type PayloadData } from './inline.schema'
+@@ -93,7 +93,7 @@ const Inline: Widget<PayloadData> = ({ data }) => {
+ 
+     const handleClick = useCallback(() => {
+         if (data.action && isWidgetActive && !loading) {
+-            void systemAction(normalizeInlineAction(data.action))
++            void systemAction(normalizeInlineAction(data.action, { from: 'inline' }))
+         }
+     }, [data.action, isWidgetActive, loading, systemAction])
+ 
+diff --git a/src/widgets/link/CHANGELOG.md b/src/widgets/link/CHANGELOG.md
+index f8f9af5..95d45b2 100644
+--- a/src/widgets/link/CHANGELOG.md
++++ b/src/widgets/link/CHANGELOG.md
+@@ -1,5 +1,15 @@
+ # История изменений
+ 
++## Добавили действие по нажатию на ссылку
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++Новое опциональное поле `action` переопределяет переход по `url`: по нажатию можно отправить сообщение в чат (`message`), открыть другой диплинк (`deeplink`) или вызвать метод хоста (`externalMethod`). Контракт `action` общий с виджетами `inline` и `send-message`. Без `action` ссылка, как и раньше, открывает `url`.
++
+ ## Добавили виджет Link
+ ---
+ introduced: auto
+diff --git a/src/widgets/link/README.md b/src/widgets/link/README.md
+index 3a1cfa3..e5a6c45 100644
+--- a/src/widgets/link/README.md
++++ b/src/widgets/link/README.md
+@@ -32,9 +32,34 @@ Link — ссылка внутри текста ответа: иконка сл
+ 
+ Если картинка не загрузилась, показывается `ImageErrorIcon`.
+ 
++## Действие
++
++По умолчанию нажатие открывает `url`. Опциональное поле `action` переопределяет переход — это общий контракт inline-виджетов (`inline`, `link`, `send-message`) из [`inline-element`](../../parts/inline-element/inline-element.schema.ts):
++
++- `message` — отправить сообщение в чат от имени пользователя с `inputType: "widget"`; `content` уходит агенту в `function_results`;
++- `deeplink` — открыть URL или диплинк;
++- `externalMethod` — вызвать метод хоста, после него опционально выполнить callback (`callbackType`).
++
++```json
++{
++    "text": "открыть вклад",
++    "url": "https://www.sberbank.ru/ru/person/contributions/deposits",
++    "action": {
++        "type": "externalMethod",
++        "payload": {
++            "externalMethodSettings": {
++                "methodName": "openDepositForm",
++                "methodParams": { "productCode": "SberVklad" },
++                "callbackType": "none"
++            }
++        }
++    }
++}
++```
++
+ ## Поведение
+ 
+-- Нажатие вызывает системное действие `deeplink` с полем `url`.
++- Нажатие вызывает `action`, а без него — системное действие `deeplink` с полем `url`.
+ - Ссылка не блокируется, когда сообщение становится неактивным: переход можно открыть и из старого ответа. Повторное нажатие игнорируется только пока выполняется предыдущий переход.
+ - Состояния по макету: hover — прозрачность 64%, pressed — 78%.
+ - Подчёркивание — прямая линия толщиной `--line-thickness-default` под каждой строкой текста.
+diff --git a/src/widgets/link/link.examples.ts b/src/widgets/link/link.examples.ts
+index 42e18f8..50779bd 100644
+--- a/src/widgets/link/link.examples.ts
++++ b/src/widgets/link/link.examples.ts
+@@ -25,6 +25,25 @@ export const examples: StoryExample<PayloadData>[] = [
+             }
+         }
+     },
++    {
++        name: 'LinkWithAction',
++        user_prompt: 'Как открыть вклад в приложении?',
++        notes: 'action переопределяет переход по url: по нажатию вызывается метод хоста, который открывает форму вклада',
++        params: {
++            text: 'открыть вклад',
++            url: 'https://www.sberbank.ru/ru/person/contributions/deposits',
++            action: {
++                type: 'externalMethod',
++                payload: {
++                    externalMethodSettings: {
++                        methodName: 'openDepositForm',
++                        methodParams: { productCode: 'SberVklad' },
++                        callbackType: 'none'
++                    }
++                }
++            }
++        }
++    },
+     {
+         name: 'LinkLongText',
+         user_prompt: 'Где прочитать полные условия вклада?',
+diff --git a/src/widgets/link/link.meta.ts b/src/widgets/link/link.meta.ts
+index 42102ff..b93190c 100644
+--- a/src/widgets/link/link.meta.ts
++++ b/src/widgets/link/link.meta.ts
+@@ -20,7 +20,8 @@ export const widgetBuildMeta = {
+     ],
+     display_description:
+         'Ссылка внутри текста ответа: стрелка ↗ или логотип слева и текст с подчёркиванием. ' +
+-        'Используй, чтобы дать переход на веб-страницу или экран приложения прямо из предложения.'
++        'Используй, чтобы дать переход на веб-страницу или экран приложения прямо из предложения. ' +
++        'Если по нажатию нужно вызвать метод хоста или отправить сообщение, передай action.'
+ } as const
+ 
+ export const widgetDevMeta = {
+diff --git a/src/widgets/link/link.schema.ts b/src/widgets/link/link.schema.ts
+index 7fe4981..8de36d7 100644
+--- a/src/widgets/link/link.schema.ts
++++ b/src/widgets/link/link.schema.ts
+@@ -1,18 +1,22 @@
+ import { z } from 'zod'
+ 
+-import { InlineIconSchema } from '#/parts/inline-element/inline-element.schema'
++import { InlineActionSchema, InlineIconSchema } from '#/parts/inline-element/inline-element.schema'
+ 
+ export const PayloadDataSchema = z
+     .object({
+         text: z.string().describe('Текст ссылки внутри предложения, например «Рейтинг» или «условия вклада»'),
+         url: z.string().describe('URL страницы или диплинк экрана приложения, который откроется по нажатию'),
++        action: InlineActionSchema.optional().describe(
++            'Действие по нажатию вместо открытия url: message — отправить сообщение в чат, deeplink — открыть экран, ' +
++                'externalMethod — вызвать метод хоста. Передавай, только если простого перехода по url недостаточно'
++        ),
+         icon: InlineIconSchema.optional().describe(
+             'Иконка слева от текста. Если не передана — стрелка ↗. Для ссылки на сервис или компанию передай логотип по URL'
+         )
+     })
+     .describe(
+         'Ссылка внутри текста ответа: иконка слева и текст с подчёркиванием. ' +
+-            'По нажатию открывает URL или диплинк'
++            'По нажатию открывает URL или диплинк либо выполняет action'
+     )
+ 
+ export type PayloadData = z.infer<typeof PayloadDataSchema>
+diff --git a/src/widgets/link/link.stories.tsx b/src/widgets/link/link.stories.tsx
+index 62c87e1..2bbf13e 100644
+--- a/src/widgets/link/link.stories.tsx
++++ b/src/widgets/link/link.stories.tsx
+@@ -35,6 +35,7 @@ const generatedStories = createStoriesFromExamples(examples, PayloadDataSchema)
+ 
+ export const LinkDefault = generatedStories.LinkDefault
+ export const LinkWithImage = generatedStories.LinkWithImage
++export const LinkWithAction = generatedStories.LinkWithAction
+ export const LinkLongText = generatedStories.LinkLongText
+ 
+ export const WidgetMetadata = createWidgetMetaStoryWithSchema(widgetMeta, PayloadDataSchema)
+diff --git a/src/widgets/link/link.test.tsx b/src/widgets/link/link.test.tsx
+index aca1e35..202b9e9 100644
+--- a/src/widgets/link/link.test.tsx
++++ b/src/widgets/link/link.test.tsx
+@@ -43,6 +43,45 @@ describe('Link', () => {
+         expect(mocks.action).toHaveBeenCalledWith({ type: 'deeplink', from: 'link', payload: { url: data.url } })
+     })
+ 
++    it('с action выполняет его вместо перехода по url', () => {
++        const data = getExample('LinkWithAction')
++
++        render(<Link data={data} />)
++        fireEvent.click(screen.getByRole('link', { name: data.text }))
++
++        expect(mocks.action).toHaveBeenCalledTimes(1)
++        expect(mocks.action).toHaveBeenCalledWith({
++            type: 'externalMethod',
++            from: 'link',
++            payload: {
++                externalMethodSettings: {
++                    methodName: 'openDepositForm',
++                    methodParams: { productCode: 'SberVklad' },
++                    callbackType: 'none'
++                }
++            }
++        })
++    })
++
++    it('action message уходит в чат с inputType widget', () => {
++        render(
++            <Link
++                data={{
++                    text: 'условия вклада',
++                    url: 'https://www.sberbank.ru/ru/person/contributions/deposits',
++                    action: { type: 'message', payload: { text: 'Расскажи об условиях вклада' } }
++                }}
++            />
++        )
++        fireEvent.click(screen.getByRole('link', { name: 'условия вклада' }))
++
++        expect(mocks.action).toHaveBeenCalledWith({
++            type: 'message',
++            from: 'link',
++            payload: { text: 'Расскажи об условиях вклада', inputType: 'widget' }
++        })
++    })
++
+     it('без icon показывает стрелку слева от текста', () => {
+         const { container } = render(<Link data={getExample('LinkDefault')} />)
+ 
+diff --git a/src/widgets/link/link.tsx b/src/widgets/link/link.tsx
+index bc313c1..4b3a68b 100644
+--- a/src/widgets/link/link.tsx
++++ b/src/widgets/link/link.tsx
+@@ -2,7 +2,7 @@ import { useCallback } from 'react'
+ import { ArrowTopRightIcon } from '@sbol/asdk-icons'
+ 
+ import { useSystemActions } from '#/hooks'
+-import { InlineElement, InlineIcon } from '#/parts/inline-element'
++import { InlineElement, InlineIcon, normalizeInlineAction } from '#/parts/inline-element'
+ import { widget, type Widget } from '#/system'
+ 
+ import { type PayloadData } from './link.schema'
+@@ -12,10 +12,18 @@ export const Link: Widget<PayloadData> = ({ data }) => {
+     const { action, loading } = useSystemActions()
+ 
+     const handleClick = useCallback(() => {
+-        if (!loading) {
+-            void action({ type: 'deeplink', from: 'link', payload: { url: data.url } })
++        if (loading) {
++            return
+         }
+-    }, [action, data.url, loading])
++
++        // action переопределяет переход по url
++        void action(
++            normalizeInlineAction(data.action ?? { type: 'deeplink', payload: { url: data.url } }, {
++                from: 'link',
++                inputType: 'widget'
++            })
++        )
++    }, [action, data.action, data.url, loading])
+ 
+     return (
+         <InlineElement
+diff --git a/src/widgets/send-message/CHANGELOG.md b/src/widgets/send-message/CHANGELOG.md
+index 41685cb..f2dedf2 100644
+--- a/src/widgets/send-message/CHANGELOG.md
++++ b/src/widgets/send-message/CHANGELOG.md
+@@ -1,5 +1,25 @@
+ # История изменений
+ 
++## Добавили проверку активности через метод хоста
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++Новое опциональное поле `checkActive` (`methodName`, `methodParams`) спрашивает у хоста, актуально ли действие. Пока идёт запрос, действие неактивно; неактивным оно остаётся только при ответе `false` или `"false"`. Если хост не поддерживает внешние методы, метод не найден, упал или ответил непонятно, действие активно. После нажатия и завершения `action` проверка повторяется, чтобы действие погасло, если событие уже обработано.
++
++## Заменили message и content на общий action
++---
++introduced: auto
++type: feature
++breaking: payload
++deprecated: false
++---
++
++Поля `message` и `content` удалены. Действие по нажатию задаётся полем `action` — общим контрактом с виджетами `inline` и `link`: `message` (текст и `content` для агента), `deeplink` или `externalMethod`. Без `action` в чат, как и раньше, отправляется `text`. Вместо `{ "message": "...", "content": "..." }` передавайте `{ "action": { "type": "message", "payload": { "text": "...", "content": "..." } } }`.
++
+ ## Добавили виджет SendMessage
+ ---
+ introduced: auto
+diff --git a/src/widgets/send-message/README.md b/src/widgets/send-message/README.md
+index edb4858..cc855bd 100644
+--- a/src/widgets/send-message/README.md
++++ b/src/widgets/send-message/README.md
+@@ -1,6 +1,6 @@
+ # SendMessage
+ 
+-SendMessage — действие внутри текста ответа: стрелка ↳ и фраза с глаголом с подчёркиванием. По нажатию отправляет сообщение в чат от имени пользователя.
++SendMessage — действие внутри текста ответа: стрелка ↳ и фраза с глаголом с подчёркиванием. По нажатию выполняет `action`, по умолчанию отправляет сообщение в чат от имени пользователя.
+ 
+ Виджет построен на общей основе inline-виджетов [`inline-element`](../../parts/inline-element/). Иконка слева стоит в отдельной колонке: при переносе строки выравниваются по началу текста, а не уходят под иконку.
+ 
+@@ -18,7 +18,10 @@ SendMessage — действие внутри текста ответа: стр
+         "display": "inline",
+         "data": {
+             "text": "проанализировать траты",
+-            "message": "Проанализируй мои траты и подскажи, где сэкономить"
++            "action": {
++                "type": "message",
++                "payload": { "text": "Проанализируй мои траты и подскажи, где сэкономить" }
++            }
+         }
+     }
+ }
+@@ -26,21 +29,71 @@ SendMessage — действие внутри текста ответа: стр
+ 
+ ## Текст
+ 
+-По макету действие встраивается в предложение как глагол: «Ещё можно ↳ проанализировать траты и выбрать, где сэкономить». Поле `text` — видимая фраза, `message` — сообщение, которое уйдёт в чат. Если `message` не передан, отправляется `text`.
++По макету действие встраивается в предложение как глагол: «Ещё можно ↳ проанализировать траты и выбрать, где сэкономить». Поле `text` — видимая фраза. Если `action` не передан, в чат отправляется сам `text`.
+ 
+-## Отправка
++## Действие
+ 
+-- Нажатие вызывает системное действие `message` с `inputType: "widget"`; имя `send_message` попадает в `function_results`.
+-- `content` передаёт агенту скрытые данные вместе с сообщением.
++`action` — общий контракт inline-виджетов (`inline`, `link`, `send-message`) из [`inline-element`](../../parts/inline-element/inline-element.schema.ts):
++
++- `message` — отправить сообщение в чат от имени пользователя. Уходит с `inputType: "widget"`, имя `send_message` попадает в `function_results`, `content` передаёт агенту скрытые данные;
++- `deeplink` — открыть URL или диплинк;
++- `externalMethod` — вызвать метод хоста, после него опционально выполнить callback (`callbackType`).
++
++## Проверка активности
++
++Опциональное поле `checkActive` спрашивает у хоста, актуально ли ещё действие. Это нужно, если действие привязано к событию, которое могло устареть или уже быть выполнено в другом месте.
++
++```json
++{
++    "text": "подтвердить запись",
++    "action": {
++        "type": "externalMethod",
++        "payload": {
++            "externalMethodSettings": {
++                "methodName": "confirmEvent",
++                "methodParams": { "eventId": "1234567" },
++                "callbackType": "none"
++            }
++        }
++    },
++    "checkActive": {
++        "methodName": "checkActiveId",
++        "methodParams": { "eventId": "1234567" }
++    }
++}
++```
++
++### Спецификация
++
++1. **Без `checkActive`** — действие активно сразу, хост не вызывается.
++2. **Хост не поддерживает внешние методы** (нет `getExternalMethod` в контексте) — действие активно сразу, без запроса.
++3. **Проверка при монтировании.** Виджет вызывает `getExternalMethod(methodName)` и затем метод с `methodParams` (без них — с пустым объектом). Пока запрос выполняется, действие неактивно: серое и не нажимается.
++4. **Разбор ответа:**
++
++   | Ответ метода | Результат |
++   |---|---|
++   | `true`, `"true"`, `" TRUE "` | активно |
++   | `false`, `"false"`, `" False "` | неактивно |
++   | `undefined`, `null`, другая строка, число, объект | активно |
++   | метод не найден или выбросил ошибку | активно, ошибка пишется в консоль |
++
++   Неактивным действие становится только при явном `false`: строки сравниваются без учёта регистра и пробелов по краям.
++5. **После нажатия.** Виджет выполняет `action` и ждёт его завершения (для `externalMethod` — ответа метода и callback). Затем запускает проверку заново: на время запроса действие снова неактивно, по ответу активируется или остаётся неактивным.
++6. **С `inactiveAfterSend: true`** повторная проверка после нажатия не выполняется: действие уже выключено навсегда.
++7. **Сообщение неактивно** (`isActive: false` от хоста) — проверка не запускается, действие неактивно. Если хост снова сделает сообщение активным, проверка выполнится заново.
++8. **Гонки.** Применяется только ответ последнего запроса: ответ устаревшей проверки или проверки после размонтирования игнорируется.
+ 
+ ## Неактивное состояние
+ 
+-Действие становится серым и перестаёт отправлять сообщения, если:
++Действие становится серым и перестаёт срабатывать, если:
+ 
+ - хост пометил сообщение неактивным (`isActive: false`);
+-- передан `inactiveAfterSend: true` и действие уже нажато.
++- передан `inactiveAfterSend: true` и действие уже нажато;
++- передан `checkActive` и проверка ещё идёт или хост ответил `false`.
++
++`inactiveAfterSend` используйте для однократных действий, чтобы избежать дублирования запроса и ошибок при повторном нажатии.
+ 
+-`inactiveAfterSend` используйте для однократных действий, чтобы избежать дублирования запроса и ошибок при повторном нажатии. Состояние после нажатия хранится в виджете и не переживает повторного монтирования.
++> **Состояние `inactiveAfterSend` НЕ СОХРАНЯЕТСЯ НИГДЕ.** Оно живёт только в смонтированном виджете: после перезахода в чат действие снова станет активным. Чтобы неактивность сохранялась, используйте `checkActive` — `externalMethod` своего API в web/iOS/Android, который вернёт `false` для уже выполненного действия. `checkActive` спрашивает хост при каждом монтировании.
+ 
+ ## Ограничения
+ 
+diff --git a/src/widgets/send-message/hooks/use-check-active.test.ts b/src/widgets/send-message/hooks/use-check-active.test.ts
+new file mode 100644
+index 0000000..8c30f9f
+--- /dev/null
++++ b/src/widgets/send-message/hooks/use-check-active.test.ts
+@@ -0,0 +1,105 @@
++import { act, renderHook, waitFor } from '@testing-library/react'
++import { beforeEach, describe, expect, it, vi } from 'vitest'
++
++import { parseCheckActiveResponse, useCheckActive } from './use-check-active'
++
++const mocks = vi.hoisted(() => ({ getExternalMethod: null as unknown }))
++
++vi.mock('#/hooks', () => ({
++    useGetExternalMethod: () => mocks.getExternalMethod
++}))
++
++const CHECK_ACTIVE = { methodName: 'checkActiveId', methodParams: { eventId: '1234567' } }
++
++const createDeferred = <T>() => {
++    let resolve: (value: T) => void = () => undefined
++    const promise = new Promise<T>((res) => {
++        resolve = res
++    })
++
++    return { promise, resolve }
++}
++
++describe('parseCheckActiveResponse', () => {
++    it.each([
++        [true, true],
++        [false, false],
++        ['true', true],
++        ['false', false],
++        [' FALSE ', false],
++        ['False', false],
++        [' True ', true]
++    ])('ответ %j → %s', (response, expected) => {
++        expect(parseCheckActiveResponse(response)).toBe(expected)
++    })
++
++    it.each([[undefined], [null], [''], ['да'], [0], [1], [{ isActive: false }]])(
++        'пустой или непонятный ответ %j считается активным',
++        (response) => {
++            expect(parseCheckActiveResponse(response)).toBe(true)
++        }
++    )
++})
++
++describe('useCheckActive', () => {
++    beforeEach(() => {
++        mocks.getExternalMethod = null
++    })
++
++    it('без getExternalMethod сразу активен и не ждёт проверки', () => {
++        const { result } = renderHook(() => useCheckActive(CHECK_ACTIVE))
++
++        expect(result.current.status).toBe('active')
++    })
++
++    it('при enabled=false не вызывает метод', () => {
++        mocks.getExternalMethod = vi.fn()
++
++        renderHook(() => useCheckActive(CHECK_ACTIVE, false))
++
++        expect(mocks.getExternalMethod).not.toHaveBeenCalled()
++    })
++
++    it('не перезапускает проверку, если хост отдал новую функцию getExternalMethod', async () => {
++        const method = vi.fn(async () => true)
++
++        mocks.getExternalMethod = vi.fn(async () => method)
++
++        const { result, rerender } = renderHook(() => useCheckActive(CHECK_ACTIVE))
++
++        await waitFor(() => expect(result.current.status).toBe('active'))
++
++        mocks.getExternalMethod = vi.fn(async () => method)
++        rerender()
++
++        expect(result.current.status).toBe('active')
++        expect(method).toHaveBeenCalledTimes(1)
++    })
++
++    it('применяет только ответ последнего запроса', async () => {
++        const first = createDeferred<unknown>()
++        const second = createDeferred<unknown>()
++        const method = vi.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
++
++        mocks.getExternalMethod = vi.fn(async () => method)
++
++        const { result } = renderHook(() => useCheckActive(CHECK_ACTIVE))
++
++        await waitFor(() => expect(method).toHaveBeenCalledTimes(1))
++
++        act(() => {
++            void result.current.recheck()
++        })
++        await waitFor(() => expect(method).toHaveBeenCalledTimes(2))
++
++        // Свежий ответ приходит раньше устаревшего
++        await act(async () => {
++            second.resolve(true)
++        })
++        await act(async () => {
++            first.resolve(false)
++        })
++
++        expect(result.current.status).toBe('active')
++    })
++})
+diff --git a/src/widgets/send-message/hooks/use-check-active.ts b/src/widgets/send-message/hooks/use-check-active.ts
+new file mode 100644
+index 0000000..34eb776
+--- /dev/null
++++ b/src/widgets/send-message/hooks/use-check-active.ts
+@@ -0,0 +1,100 @@
++/* eslint-disable no-console */
++import { useCallback, useEffect, useRef, useState } from 'react'
++
++import { useGetExternalMethod } from '#/hooks'
++
++import { type CheckActive } from '../send-message.schema'
++
++/**
++ * Состояние проверки активности:
++ * - `checking` — запрос к внешнему методу ещё выполняется, действие неактивно;
++ * - `active` — хост разрешил действие или проверить его не удалось;
++ * - `inactive` — хост ответил false.
++ */
++export type CheckActiveStatus = 'checking' | 'active' | 'inactive'
++
++/**
++ * Приводит ответ внешнего метода к признаку активности.
++ * Хост может вернуть boolean или строку "true"/"false". Неактивным действие становится
++ * только при явном false: пустой или непонятный ответ считается активным.
++ */
++export const parseCheckActiveResponse = (response: unknown): boolean => {
++    if (typeof response === 'boolean') {
++        return response
++    }
++
++    if (typeof response === 'string') {
++        return response.trim().toLowerCase() !== 'false'
++    }
++
++    return true
++}
++
++/**
++ * Проверяет через внешний метод хоста, активно ли действие.
++ * Без `checkActive` или без getExternalMethod действие активно сразу, без запроса.
++ * Проверка запускается при монтировании, пока `enabled` равно true; `recheck` повторяет её вручную,
++ * например после отправки сообщения. Применяется только ответ последнего запроса.
++ */
++export const useCheckActive = (checkActive: CheckActive | undefined, enabled = true) => {
++    const getExternalMethod = useGetExternalMethod()
++    const methodName = checkActive?.methodName
++    // Параметры сравниваются по значению, чтобы новый объект с теми же данными не перезапускал проверку
++    const paramsKey = JSON.stringify(checkActive?.methodParams ?? {})
++    const hasExternalMethod = Boolean(getExternalMethod)
++    const [status, setStatus] = useState<CheckActiveStatus>(methodName && hasExternalMethod ? 'checking' : 'active')
++    const requestIdRef = useRef(0)
++    // Хост может отдавать новую функцию на каждом рендере: держим её в ref, чтобы не перезапускать проверку
++    const getExternalMethodRef = useRef(getExternalMethod)
++
++    useEffect(() => {
++        getExternalMethodRef.current = getExternalMethod
++    }, [getExternalMethod])
++
++    const recheck = useCallback(async () => {
++        const getMethod = getExternalMethodRef.current
++
++        if (!methodName || !getMethod) {
++            setStatus('active')
++            return
++        }
++
++        requestIdRef.current += 1
++        const requestId = requestIdRef.current
++        let isActive = true
++
++        setStatus('checking')
++
++        try {
++            const method = await getMethod(methodName)
++
++            if (method) {
++                isActive = parseCheckActiveResponse(await method(JSON.parse(paramsKey)))
++            } else {
++                console.error(`Внешний метод ${methodName} не найден, действие считается активным`)
++            }
++        } catch (error: unknown) {
++            console.error(error)
++        }
++
++        // Более поздний запрос или размонтирование отменяют этот ответ
++        if (requestId === requestIdRef.current) {
++            setStatus(isActive ? 'active' : 'inactive')
++        }
++    }, [methodName, paramsKey])
++
++    useEffect(() => {
++        if (!enabled) {
++            return undefined
++        }
++
++        void recheck()
++
++        return () => {
++            requestIdRef.current += 1
++        }
++        // Проверка перезапускается, если хост начал или перестал поддерживать внешние методы
++    }, [enabled, hasExternalMethod, recheck])
++
++    return { status, recheck }
++}
+diff --git a/src/widgets/send-message/send-message.examples.ts b/src/widgets/send-message/send-message.examples.ts
+index bab5ea1..78c56bf 100644
+--- a/src/widgets/send-message/send-message.examples.ts
++++ b/src/widgets/send-message/send-message.examples.ts
+@@ -9,23 +9,31 @@ export const examples: StoryExample<PayloadData>[] = [
+         notes: 'Текст действия — фраза с глаголом, которая продолжает предложение ответа: «Ещё можно ↳ проанализировать траты»',
+         params: {
+             text: 'проанализировать траты',
+-            message: 'Проанализируй мои траты и подскажи, где сэкономить'
++            action: {
++                type: 'message',
++                payload: { text: 'Проанализируй мои траты и подскажи, где сэкономить' }
++            }
+         }
+     },
+     {
+         name: 'SendMessageWithContent',
+         user_prompt: 'Хватит ли моих накоплений на первый взнос по ипотеке?',
+-        notes: 'content передаёт агенту скрытые данные вместе с сообщением',
++        notes: 'content в action message передаёт агенту скрытые данные вместе с сообщением',
+         params: {
+             text: 'включить их',
+-            message: 'Включи накопительный счёт в прогноз',
+-            content: '{"accountType":"savings","withdrawable":true}'
++            action: {
++                type: 'message',
++                payload: {
++                    text: 'Включи накопительный счёт в прогноз',
++                    content: '{"accountType":"savings","withdrawable":true}'
++                }
++            }
+         }
+     },
+     {
+         name: 'SendMessageTextAsMessage',
+         user_prompt: 'Хочу открыть ресторан, с чего начать?',
+-        notes: 'Без поля message в чат отправляется text',
++        notes: 'Без поля action в чат отправляется text',
+         params: {
+             text: 'Перейти к регистрации'
+         }
+@@ -36,17 +44,65 @@ export const examples: StoryExample<PayloadData>[] = [
+         notes: 'inactiveAfterSend делает действие однократным: после нажатия оно становится серым и больше не отправляет сообщение',
+         params: {
+             text: 'перейти к планированию бюджета',
+-            message: 'Давай спланируем бюджет открытия кофейни',
++            action: {
++                type: 'message',
++                payload: { text: 'Давай спланируем бюджет открытия кофейни' }
++            },
+             inactiveAfterSend: true
+         }
+     },
++    {
++        name: 'SendMessageCheckActive',
++        user_prompt: 'Напомни, на какое мероприятие я зарегистрирован?',
++        notes:
++            'checkActive спрашивает у хоста, актуально ли событие: пока идёт запрос, действие неактивно, ' +
++            'при ответе false становится серым. После нажатия проверка повторяется',
++        params: {
++            text: 'отменить регистрацию',
++            action: {
++                type: 'message',
++                payload: { text: 'Отмени мою регистрацию на мероприятие' }
++            },
++            checkActive: {
++                methodName: 'checkActiveId',
++                methodParams: { eventId: '1234567' }
++            }
++        }
++    },
++    {
++        name: 'SendMessageExternalMethodCheckActive',
++        user_prompt: 'Подтверди мою запись к врачу на завтра',
++        notes:
++            'action externalMethod вызывает метод хоста; после его выполнения checkActive проверяется заново, ' +
++            'и если событие уже обработано, действие становится неактивным',
++        params: {
++            text: 'подтвердить запись',
++            action: {
++                type: 'externalMethod',
++                payload: {
++                    externalMethodSettings: {
++                        methodName: 'confirmEvent',
++                        methodParams: { eventId: '1234567' },
++                        callbackType: 'none'
++                    }
++                }
++            },
++            checkActive: {
++                methodName: 'checkActiveId',
++                methodParams: { eventId: '1234567' }
++            }
++        }
++    },
+     {
+         name: 'SendMessageLongText',
+         user_prompt: 'Расскажи про открытие кофейни',
+         notes: 'Длинный текст переносится на следующие строки, подчёркивание рисуется под каждой строкой',
+         params: {
+             text: 'узнать больше об открытии кофейни и требованиях к помещению',
+-            message: 'Расскажи подробнее об открытии кофейни и требованиях к помещению'
++            action: {
++                type: 'message',
++                payload: { text: 'Расскажи подробнее об открытии кофейни и требованиях к помещению' }
++            }
+         }
+     }
+ ]
+diff --git a/src/widgets/send-message/send-message.meta.ts b/src/widgets/send-message/send-message.meta.ts
+index 48164db..5ec9498 100644
+--- a/src/widgets/send-message/send-message.meta.ts
++++ b/src/widgets/send-message/send-message.meta.ts
+@@ -20,9 +20,11 @@ export const widgetBuildMeta = {
+     ],
+     display_description:
+         'Действие внутри текста ответа: стрелка ↳ и фраза с глаголом с подчёркиванием. ' +
+-        'По нажатию отправляет сообщение в чат от имени пользователя. ' +
++        'По нажатию выполняет action, по умолчанию отправляет text в чат от имени пользователя. ' +
+         'Используй, чтобы предложить следующий шаг прямо в предложении, например «могу ↳ пересчитать прогноз». ' +
+-        'Для однократных действий передавай inactiveAfterSend: true.'
++        'Для однократных действий передавай inactiveAfterSend: true, но оно не сохраняется после перезахода в чат. ' +
++        'Чтобы неактивность сохранялась или если действие привязано к событию, которое может устареть, ' +
++        'передай checkActive с методом проверки хоста.'
+ } as const
+ 
+ export const widgetDevMeta = {
+diff --git a/src/widgets/send-message/send-message.schema.ts b/src/widgets/send-message/send-message.schema.ts
+index 2d608eb..a79dacc 100644
+--- a/src/widgets/send-message/send-message.schema.ts
++++ b/src/widgets/send-message/send-message.schema.ts
+@@ -1,5 +1,28 @@
+ import { z } from 'zod'
+ 
++import { InlineActionSchema } from '#/parts/inline-element/inline-element.schema'
++
++export const CheckActiveSchema = z
++    .object({
++        methodName: z
++            .string()
++            .describe('Имя внешнего метода хоста, который отвечает, можно ли ещё выполнить действие, например checkActiveId'),
++        // passthrough вместо record: additionalProperties: {} валидатор GigaChat считает нетипизированным узлом
++        methodParams: z
++            .object({})
++            .passthrough()
++            .optional()
++            .describe(
++                'Параметры внешнего метода, по которым хост находит событие, например { "eventId": "1234567" }. ' +
++                    'Если не переданы, метод вызывается с пустым объектом'
++            )
++    })
++    .describe(
++        'Проверка активности действия через внешний метод хоста. Метод возвращает true/false или строку "true"/"false". ' +
++            'Пока идёт проверка, действие неактивно. Действие становится неактивным только при ответе false; ' +
++            'если метода нет, он упал или ответ непонятен, действие активно. После выполнения action проверка повторяется'
++    )
++
+ export const PayloadDataSchema = z
+     .object({
+         text: z
+@@ -7,25 +30,30 @@ export const PayloadDataSchema = z
+             .describe(
+                 'Текст действия внутри предложения — фраза с глаголом, например «проанализировать траты» или «перейти к регистрации»'
+             ),
+-        message: z
+-            .string()
+-            .optional()
+-            .describe('Сообщение, которое отправится в чат от имени пользователя по нажатию. Если не передано, отправляется text'),
+-        content: z
+-            .string()
+-            .optional()
+-            .describe('Скрытые данные для агента, которые уйдут в function_results вместе с сообщением'),
++        action: InlineActionSchema.optional().describe(
++            'Действие по нажатию: message — отправить сообщение в чат от имени пользователя (content уходит агенту ' +
++                'в function_results), deeplink — открыть экран, externalMethod — вызвать метод хоста. ' +
++                'Если не передано, в чат отправляется text'
++        ),
+         inactiveAfterSend: z
+             .boolean()
+             .optional()
+             .describe(
+-                'Сделать действие неактивным после первой отправки. Используй для однократных действий, ' +
+-                    'чтобы избежать дублирования запроса и ошибок при повторном нажатии. По умолчанию false'
+-            )
++                'Сделать действие неактивным после первого нажатия. Используй для однократных действий, ' +
++                    'чтобы избежать дублирования запроса и ошибок при повторном нажатии. По умолчанию false. ' +
++                    'Состояние НЕ СОХРАНЯЕТСЯ НИГДЕ: после перезахода в чат действие снова станет активным. ' +
++                    'Чтобы неактивность сохранялась, используй checkActive — externalMethod своего API в web/iOS/Android, ' +
++                    'который вернёт false для уже выполненного действия'
++            ),
++        checkActive: CheckActiveSchema.optional().describe(
++            'Проверка на стороне хоста, актуально ли ещё действие. Используй, когда действие привязано к событию, ' +
++                'которое может устареть или уже быть выполнено в другом месте. Если не передано, действие активно сразу'
++        )
+     })
+     .describe(
+         'Действие внутри текста ответа: стрелка ↳ и фраза с глаголом с подчёркиванием. ' +
+-            'По нажатию отправляет сообщение в чат от имени пользователя'
++            'По нажатию выполняет action, по умолчанию отправляет text в чат от имени пользователя'
+     )
+ 
++export type CheckActive = z.infer<typeof CheckActiveSchema>
+ export type PayloadData = z.infer<typeof PayloadDataSchema>
+diff --git a/src/widgets/send-message/send-message.stories.tsx b/src/widgets/send-message/send-message.stories.tsx
+index 5adaa21..2ad44c9 100644
+--- a/src/widgets/send-message/send-message.stories.tsx
++++ b/src/widgets/send-message/send-message.stories.tsx
+@@ -1,4 +1,6 @@
+-import type { Meta } from '@storybook/react'
++import { IGetExternalMethod, type IGetExternalMethod as GetExternalMethod } from '@sbol/asdk-core'
++import type { Decorator, Meta } from '@storybook/react'
++import { useState, type ReactNode } from 'react'
+ 
+ import {
+     buildArgTypesFromZod,
+@@ -14,6 +16,59 @@ import { widgetMeta } from './send-message.meta'
+ import { PayloadDataSchema } from './send-message.schema'
+ 
+ const schemaDescription = extractSchemaDescription(PayloadDataSchema)
++const ExternalMethodProvider = IGetExternalMethod.context.Provider
++// Задержка ответа хоста, чтобы в Storybook было видно состояние проверки
++const HOST_RESPONSE_DELAY = 1000
++
++const wait = (delay: number): Promise<void> =>
++    new Promise((resolve) => {
++        setTimeout(resolve, delay)
++    })
++
++/**
++ * Мок хоста: checkActiveId отвечает строкой "true"/"false", как часть реальных хостов,
++ * confirmEvent обрабатывает событие, после чего оно становится неактивным
++ */
++const createHostMock = (isEventActiveInitially: boolean): GetExternalMethod => {
++    let isEventActive = isEventActiveInitially
++
++    const getExternalMethod: GetExternalMethod = async (methodName) => {
++        if (methodName === 'checkActiveId') {
++            return async () => {
++                await wait(HOST_RESPONSE_DELAY)
++
++                return String(isEventActive)
++            }
++        }
++
++        if (methodName === 'confirmEvent') {
++            return async () => {
++                await wait(HOST_RESPONSE_DELAY)
++                isEventActive = false
++
++                return undefined
++            }
++        }
++
++        return undefined
++    }
++
++    return getExternalMethod
++}
++
++const HostMock = ({ isEventActive, children }: { isEventActive: boolean; children: ReactNode }) => {
++    const [getExternalMethod] = useState(() => createHostMock(isEventActive))
++
++    return <ExternalMethodProvider value={getExternalMethod}>{children}</ExternalMethodProvider>
++}
++
++const withHostMock =
++    (isEventActive: boolean): Decorator =>
++    (Story) => (
++        <HostMock isEventActive={isEventActive}>
++            <Story />
++        </HostMock>
++    )
+ 
+ const meta = {
+     title: 'widgets/SendMessage',
+@@ -39,6 +94,24 @@ export const SendMessageTextAsMessage = generatedStories.SendMessageTextAsMessag
+ export const SendMessageInactiveAfterSend = generatedStories.SendMessageInactiveAfterSend
+ export const SendMessageLongText = generatedStories.SendMessageLongText
+ 
++// Хост отвечает "true": действие неактивно на время проверки, затем активируется
++export const SendMessageCheckActive = {
++    ...generatedStories.SendMessageCheckActive,
++    decorators: [withHostMock(true)]
++}
++
++// Хост отвечает "false": событие устарело, действие остаётся неактивным
++export const SendMessageCheckActiveFalse = {
++    ...generatedStories.SendMessageCheckActive,
++    decorators: [withHostMock(false)]
++}
++
++// После confirmEvent повторная проверка возвращает "false" и действие становится неактивным
++export const SendMessageExternalMethodCheckActive = {
++    ...generatedStories.SendMessageExternalMethodCheckActive,
++    decorators: [withHostMock(true)]
++}
++
+ // Неактивное состояние: сообщение устарело или действие уже выполнено
+ export const SendMessageInactive = {
+     ...generatedStories.SendMessageTextAsMessage,
+diff --git a/src/widgets/send-message/send-message.test.tsx b/src/widgets/send-message/send-message.test.tsx
+index 04a59c1..87ee178 100644
+--- a/src/widgets/send-message/send-message.test.tsx
++++ b/src/widgets/send-message/send-message.test.tsx
+@@ -1,4 +1,4 @@
+-import { act, fireEvent, render, screen } from '@testing-library/react'
++import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+ import { beforeEach, describe, expect, it, vi } from 'vitest'
+ 
+ import { SendMessage } from './send-message'
+@@ -6,7 +6,11 @@ import { examples } from './send-message.examples'
+ import { PayloadDataSchema } from './send-message.schema'
+ import Styles from './send-message.module.css'
+ 
+-const mocks = vi.hoisted(() => ({ action: vi.fn(), hostActive: true }))
++const mocks = vi.hoisted(() => ({
++    action: vi.fn(),
++    hostActive: true,
++    getExternalMethod: null as unknown
++}))
+ 
+ // Активность хоста управляется из теста, локальная блокировка работает как в useWidgetActive
+ vi.mock('#/hooks', async () => {
+@@ -18,7 +22,8 @@ vi.mock('#/hooks', async () => {
+             const [isDisabled, setDisabled] = useState(false)
+ 
+             return { isActive: mocks.hostActive && !isDisabled, setDisabled }
+-        }
++        },
++        useGetExternalMethod: () => mocks.getExternalMethod
+     }
+ })
+ 
+@@ -32,10 +37,32 @@ const getExample = (name: string) => {
+     return example.params
+ }
+ 
++const createDeferred = <T,>() => {
++    let resolve: (value: T) => void = () => undefined
++    const promise = new Promise<T>((res) => {
++        resolve = res
++    })
++
++    return { promise, resolve }
++}
++
++/** Подключает мок хоста, где checkActiveId отвечает значениями по очереди */
++const mockCheckActive = (...responses: unknown[]) => {
++    const checkActiveMethod = vi.fn()
++
++    responses.forEach((response) => checkActiveMethod.mockResolvedValueOnce(response))
++    mocks.getExternalMethod = vi.fn(async (methodName: string) =>
++        methodName === 'checkActiveId' ? checkActiveMethod : undefined
++    )
++
++    return checkActiveMethod
++}
++
+ describe('SendMessage', () => {
+     beforeEach(() => {
+         mocks.action.mockReset()
+         mocks.hostActive = true
++        mocks.getExternalMethod = null
+     })
+ 
+     it('все примеры проходят схему', () => {
+@@ -44,7 +71,7 @@ describe('SendMessage', () => {
+         })
+     })
+ 
+-    it('отправляет message, content и имя виджета по нажатию', () => {
++    it('выполняет action message с content и именем виджета по нажатию', () => {
+         const data = getExample('SendMessageWithContent')
+ 
+         render(<SendMessage data={data} />)
+@@ -54,22 +81,43 @@ describe('SendMessage', () => {
+             type: 'message',
+             from: 'send_message',
+             payload: {
+-                text: data.message,
+-                content: data.content,
++                text: 'Включи накопительный счёт в прогноз',
++                content: '{"accountType":"savings","withdrawable":true}',
+                 inputType: 'widget'
+             }
+         })
+     })
+ 
+-    it('без message отправляет text', () => {
++    it('без action отправляет text', () => {
+         const data = getExample('SendMessageTextAsMessage')
+ 
+         render(<SendMessage data={data} />)
+         fireEvent.click(screen.getByRole('button', { name: data.text }))
+ 
+-        expect(mocks.action).toHaveBeenCalledWith(
+-            expect.objectContaining({ payload: expect.objectContaining({ text: data.text }) })
+-        )
++        expect(mocks.action).toHaveBeenCalledWith({
++            type: 'message',
++            from: 'send_message',
++            payload: { text: data.text, inputType: 'widget' }
++        })
++    })
++
++    it('выполняет action externalMethod', () => {
++        const data = getExample('SendMessageExternalMethodCheckActive')
++
++        render(<SendMessage data={{ ...data, checkActive: undefined }} />)
++        fireEvent.click(screen.getByRole('button', { name: data.text }))
++
++        expect(mocks.action).toHaveBeenCalledWith({
++            type: 'externalMethod',
++            from: 'send_message',
++            payload: {
++                externalMethodSettings: {
++                    methodName: 'confirmEvent',
++                    methodParams: { eventId: '1234567' },
++                    callbackType: 'none'
++                }
++            }
++        })
+     })
+ 
+     it('без inactiveAfterSend остаётся активным после отправки', () => {
+@@ -127,4 +175,156 @@ describe('SendMessage', () => {
+         expect(button).toBeDisabled()
+         expect(button).toHaveClass(Styles.inactive)
+     })
++
++    describe('checkActive', () => {
++        it('без поддержки внешних методов активен сразу', () => {
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            expect(screen.getByRole('button', { name: data.text })).toBeEnabled()
++        })
++
++        it('неактивен, пока идёт проверка, и активируется по ответу true', async () => {
++            const deferred = createDeferred<unknown>()
++            const checkActiveMethod = vi.fn(() => deferred.promise)
++
++            mocks.getExternalMethod = vi.fn(async () => checkActiveMethod)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            expect(button).toBeDisabled()
++            expect(button).toHaveClass(Styles.inactive)
++
++            fireEvent.click(button)
++            expect(mocks.action).not.toHaveBeenCalled()
++
++            await act(async () => {
++                deferred.resolve(true)
++            })
++
++            expect(mocks.getExternalMethod).toHaveBeenCalledWith('checkActiveId')
++            expect(checkActiveMethod).toHaveBeenCalledWith({ eventId: '1234567' })
++            expect(button).toBeEnabled()
++            expect(button).not.toHaveClass(Styles.inactive)
++        })
++
++        it.each([[false], ['false'], [' FALSE ']])('становится неактивным по ответу %j', async (response) => {
++            mockCheckActive(response)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            await waitFor(() => expect(button).toHaveClass(Styles.inactive))
++            fireEvent.click(button)
++
++            expect(button).toBeDisabled()
++            expect(mocks.action).not.toHaveBeenCalled()
++        })
++
++        it.each([['true'], [undefined], [null], ['непонятно']])('активен по ответу %j', async (response) => {
++            mockCheckActive(response)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            await waitFor(() => expect(screen.getByRole('button', { name: data.text })).toBeEnabled())
++        })
++
++        it('активен, если метод не найден', async () => {
++            const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
++
++            mocks.getExternalMethod = vi.fn(async () => undefined)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            await waitFor(() => expect(screen.getByRole('button', { name: data.text })).toBeEnabled())
++            errorSpy.mockRestore()
++        })
++
++        it('активен, если метод упал', async () => {
++            const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
++
++            mocks.getExternalMethod = vi.fn(async () => vi.fn().mockRejectedValue(new Error('host error')))
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            await waitFor(() => expect(screen.getByRole('button', { name: data.text })).toBeEnabled())
++            expect(errorSpy).toHaveBeenCalled()
++            errorSpy.mockRestore()
++        })
++
++        it('после завершения action проверяет активность заново', async () => {
++            const checkActiveMethod = mockCheckActive(true, 'false')
++            const actionDeferred = createDeferred<void>()
++
++            mocks.action.mockReturnValue(actionDeferred.promise)
++            const data = getExample('SendMessageExternalMethodCheckActive')
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            await waitFor(() => expect(button).toBeEnabled())
++            fireEvent.click(button)
++
++            // Пока action не завершился, повторной проверки нет
++            expect(mocks.action).toHaveBeenCalledTimes(1)
++            expect(checkActiveMethod).toHaveBeenCalledTimes(1)
++
++            await act(async () => {
++                actionDeferred.resolve()
++            })
++
++            await waitFor(() => expect(checkActiveMethod).toHaveBeenCalledTimes(2))
++            await waitFor(() => expect(button).toHaveClass(Styles.inactive))
++            expect(button).toBeDisabled()
++        })
++
++        it('после повторной проверки с ответом true остаётся активным', async () => {
++            const checkActiveMethod = mockCheckActive(true, true)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            await waitFor(() => expect(button).toBeEnabled())
++            fireEvent.click(button)
++
++            await waitFor(() => expect(checkActiveMethod).toHaveBeenCalledTimes(2))
++            await waitFor(() => expect(button).toBeEnabled())
++        })
++
++        it('с inactiveAfterSend не проверяет активность повторно', async () => {
++            const checkActiveMethod = mockCheckActive(true, true)
++            const data = { ...getExample('SendMessageCheckActive'), inactiveAfterSend: true }
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            await waitFor(() => expect(button).toBeEnabled())
++            await act(async () => {
++                fireEvent.click(button)
++            })
++
++            expect(checkActiveMethod).toHaveBeenCalledTimes(1)
++            expect(button).toBeDisabled()
++        })
++
++        it('в неактивном сообщении не обращается к хосту', () => {
++            mocks.hostActive = false
++            const checkActiveMethod = mockCheckActive(true)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            expect(mocks.getExternalMethod).not.toHaveBeenCalled()
++            expect(checkActiveMethod).not.toHaveBeenCalled()
++            expect(screen.getByRole('button', { name: data.text })).toBeDisabled()
++        })
++    })
+ })
+diff --git a/src/widgets/send-message/send-message.tsx b/src/widgets/send-message/send-message.tsx
+index 4bc4dba..0e43f54 100644
+--- a/src/widgets/send-message/send-message.tsx
++++ b/src/widgets/send-message/send-message.tsx
+@@ -2,19 +2,23 @@ import { useCallback, useRef } from 'react'
+ 
+ import SendMessageIcon from '#/assets/components/send-message-icon'
+ import { useSystemActions, useWidgetActive } from '#/hooks'
+-import { InlineElement } from '#/parts/inline-element'
++import { InlineElement, normalizeInlineAction } from '#/parts/inline-element'
+ import { widget, type Widget } from '#/system'
+ 
++import { useCheckActive } from './hooks/use-check-active'
+ import Styles from './send-message.module.css'
+ import { type PayloadData } from './send-message.schema'
+ 
+ export const SendMessage: Widget<PayloadData> = ({ data }) => {
+     const { action, loading } = useSystemActions()
+-    const { isActive, setDisabled } = useWidgetActive()
++    const { isActive: isWidgetActive, setDisabled } = useWidgetActive()
++    // Хост проверяет активность, только пока виджет не выключен сообщением или inactiveAfterSend
++    const { status: checkStatus, recheck } = useCheckActive(data.checkActive, isWidgetActive)
++    const isActive = isWidgetActive && checkStatus === 'active'
+     // Блокирует повторную отправку сразу, не дожидаясь ре-рендера после setDisabled
+     const isSentRef = useRef(false)
+ 
+-    const handleClick = useCallback(() => {
++    const send = useCallback(async () => {
+         if (!isActive || loading || (data.inactiveAfterSend && isSentRef.current)) {
+             return
+         }
+@@ -24,16 +28,33 @@ export const SendMessage: Widget<PayloadData> = ({ data }) => {
+             setDisabled(true)
+         }
+ 
+-        void action({
+-            type: 'message',
+-            from: 'send_message',
+-            payload: {
+-                text: data.message || data.text,
+-                content: data.content,
++        await action(
++            normalizeInlineAction(data.action ?? { type: 'message', payload: { text: data.text } }, {
++                from: 'send_message',
+                 inputType: 'widget'
+-            }
+-        })
+-    }, [action, data.content, data.inactiveAfterSend, data.message, data.text, isActive, loading, setDisabled])
++            })
++        )
++
++        // Действие могло изменить событие на стороне хоста: уточняем, активно ли оно теперь.
++        // С inactiveAfterSend действие уже выключено навсегда, проверка не нужна
++        if (data.checkActive && !data.inactiveAfterSend) {
++            await recheck()
++        }
++    }, [
++        action,
++        data.action,
++        data.checkActive,
++        data.inactiveAfterSend,
++        data.text,
++        isActive,
++        loading,
++        recheck,
++        setDisabled
++    ])
++
++    const handleClick = useCallback(() => {
++        void send()
++    }, [send])
+ 
+     return (
+         <InlineElement
+-- 
+2.56.0.windows.2
+
