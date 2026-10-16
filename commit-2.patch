@@ -1,0 +1,3245 @@
+From f01ba574d9e21235fe7bc433f96aa27d7014936a Mon Sep 17 00:00:00 2001
+From: Your Name <you@example.com>
+Date: Fri, 16 Oct 2026 15:19:28 +0300
+Subject: [PATCH] 2
+
+---
+ src/assets/components/caret-down-icon.tsx     |  26 ++
+ src/assets/components/caret-up-icon.tsx       |  26 ++
+ src/assets/components/index.ts                |   4 +
+ src/assets/components/send-message-icon.tsx   |  25 ++
+ src/assets/components/trend-icon.tsx          |  25 ++
+ src/parts/inline-element/CHANGELOG.md         |  23 ++
+ src/parts/inline-element/index.ts             |   5 +
+ .../inline-element/inline-action.ts}          |  31 +-
+ .../inline-element/inline-element.module.css  | 129 +++++++
+ .../inline-element/inline-element.schema.ts   |  79 +++++
+ .../inline-element/inline-element.test.tsx    |  57 +++
+ src/parts/inline-element/inline-element.tsx   | 102 ++++++
+ src/parts/inline-element/inline-icon.tsx      |  30 ++
+ .../inline-element/use-inline-underline.ts    | 152 ++++++++
+ src/widgets/inline-ticket/CHANGELOG.md        |  11 +
+ src/widgets/inline-ticket/README.md           |  54 +++
+ .../inline-ticket/accessibility.test.ts       |  15 +
+ src/widgets/inline-ticket/accessibility.ts    |  17 +
+ src/widgets/inline-ticket/index.ts            |   1 +
+ .../inline-ticket/inline-ticket.examples.ts   |  49 +++
+ .../inline-ticket/inline-ticket.meta.ts       |  43 +++
+ .../inline-ticket/inline-ticket.module.css    |  33 ++
+ .../inline-ticket/inline-ticket.schema.ts     |  29 ++
+ .../inline-ticket/inline-ticket.stories.tsx   |  48 +++
+ .../inline-ticket/inline-ticket.test.tsx      |  73 ++++
+ src/widgets/inline-ticket/inline-ticket.tsx   |  52 +++
+ src/widgets/inline/inline.schema.ts           |  57 +--
+ src/widgets/inline/inline.test.tsx            |  10 +-
+ src/widgets/inline/inline.tsx                 |   4 +-
+ src/widgets/link/CHANGELOG.md                 |  21 ++
+ src/widgets/link/README.md                    |  70 ++++
+ src/widgets/link/index.ts                     |   1 +
+ src/widgets/link/link.examples.ts             |  56 +++
+ src/widgets/link/link.meta.ts                 |  43 +++
+ src/widgets/link/link.schema.ts               |  22 ++
+ src/widgets/link/link.stories.tsx             |  48 +++
+ src/widgets/link/link.test.tsx                | 110 ++++++
+ src/widgets/link/link.tsx                     |  40 +++
+ .../navigation.registry.generated.ts          |   3 +
+ src/widgets/send-message/CHANGELOG.md         |  33 ++
+ src/widgets/send-message/README.md            | 101 ++++++
+ .../hooks/use-check-active.test.ts            | 105 ++++++
+ .../send-message/hooks/use-check-active.ts    | 100 ++++++
+ src/widgets/send-message/index.ts             |   1 +
+ .../send-message/send-message.examples.ts     | 108 ++++++
+ src/widgets/send-message/send-message.meta.ts |  46 +++
+ .../send-message/send-message.module.css      |   6 +
+ .../send-message/send-message.schema.ts       |  59 ++++
+ .../send-message/send-message.stories.tsx     | 131 +++++++
+ .../send-message/send-message.test.tsx        | 330 ++++++++++++++++++
+ src/widgets/send-message/send-message.tsx     |  71 ++++
+ 51 files changed, 2650 insertions(+), 65 deletions(-)
+ create mode 100644 src/assets/components/caret-down-icon.tsx
+ create mode 100644 src/assets/components/caret-up-icon.tsx
+ create mode 100644 src/assets/components/send-message-icon.tsx
+ create mode 100644 src/assets/components/trend-icon.tsx
+ create mode 100644 src/parts/inline-element/CHANGELOG.md
+ create mode 100644 src/parts/inline-element/index.ts
+ rename src/{widgets/inline/inline.actions.ts => parts/inline-element/inline-action.ts} (56%)
+ create mode 100644 src/parts/inline-element/inline-element.module.css
+ create mode 100644 src/parts/inline-element/inline-element.schema.ts
+ create mode 100644 src/parts/inline-element/inline-element.test.tsx
+ create mode 100644 src/parts/inline-element/inline-element.tsx
+ create mode 100644 src/parts/inline-element/inline-icon.tsx
+ create mode 100644 src/parts/inline-element/use-inline-underline.ts
+ create mode 100644 src/widgets/inline-ticket/CHANGELOG.md
+ create mode 100644 src/widgets/inline-ticket/README.md
+ create mode 100644 src/widgets/inline-ticket/accessibility.test.ts
+ create mode 100644 src/widgets/inline-ticket/accessibility.ts
+ create mode 100644 src/widgets/inline-ticket/index.ts
+ create mode 100644 src/widgets/inline-ticket/inline-ticket.examples.ts
+ create mode 100644 src/widgets/inline-ticket/inline-ticket.meta.ts
+ create mode 100644 src/widgets/inline-ticket/inline-ticket.module.css
+ create mode 100644 src/widgets/inline-ticket/inline-ticket.schema.ts
+ create mode 100644 src/widgets/inline-ticket/inline-ticket.stories.tsx
+ create mode 100644 src/widgets/inline-ticket/inline-ticket.test.tsx
+ create mode 100644 src/widgets/inline-ticket/inline-ticket.tsx
+ create mode 100644 src/widgets/link/CHANGELOG.md
+ create mode 100644 src/widgets/link/README.md
+ create mode 100644 src/widgets/link/index.ts
+ create mode 100644 src/widgets/link/link.examples.ts
+ create mode 100644 src/widgets/link/link.meta.ts
+ create mode 100644 src/widgets/link/link.schema.ts
+ create mode 100644 src/widgets/link/link.stories.tsx
+ create mode 100644 src/widgets/link/link.test.tsx
+ create mode 100644 src/widgets/link/link.tsx
+ create mode 100644 src/widgets/send-message/CHANGELOG.md
+ create mode 100644 src/widgets/send-message/README.md
+ create mode 100644 src/widgets/send-message/hooks/use-check-active.test.ts
+ create mode 100644 src/widgets/send-message/hooks/use-check-active.ts
+ create mode 100644 src/widgets/send-message/index.ts
+ create mode 100644 src/widgets/send-message/send-message.examples.ts
+ create mode 100644 src/widgets/send-message/send-message.meta.ts
+ create mode 100644 src/widgets/send-message/send-message.module.css
+ create mode 100644 src/widgets/send-message/send-message.schema.ts
+ create mode 100644 src/widgets/send-message/send-message.stories.tsx
+ create mode 100644 src/widgets/send-message/send-message.test.tsx
+ create mode 100644 src/widgets/send-message/send-message.tsx
+
+diff --git a/src/assets/components/caret-down-icon.tsx b/src/assets/components/caret-down-icon.tsx
+new file mode 100644
+index 0000000..fe41d47
+--- /dev/null
++++ b/src/assets/components/caret-down-icon.tsx
+@@ -0,0 +1,26 @@
++import type { Ref, SVGProps } from 'react'
++import { forwardRef } from 'react'
++
++// ic_16_caret_down: залитый треугольник вершиной вниз.
++// Контур — официальный ds_ic_16_triangle_down из пресета иконок @sbol/webpage.provider.bootstrap
++const CaretDownIcon = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
++    <svg
++        xmlns="http://www.w3.org/2000/svg"
++        viewBox="0 0 16 16"
++        width="1em"
++        height="1em"
++        fill="none"
++        ref={ref}
++        {...props}
++    >
++        <path
++            fill="currentColor"
++            fillRule="evenodd"
++            d="M7.17 10.05 5.2 7.24c-.5-.72-.02-1.74.83-1.74h3.93c.85 0 1.33 1.02.83 1.74l-1.97 2.81a.99.99 0 0 1-1.65 0"
++        />
++    </svg>
++)
++
++const ForwardRef = forwardRef(CaretDownIcon)
++
++export default ForwardRef
+diff --git a/src/assets/components/caret-up-icon.tsx b/src/assets/components/caret-up-icon.tsx
+new file mode 100644
+index 0000000..e404ccf
+--- /dev/null
++++ b/src/assets/components/caret-up-icon.tsx
+@@ -0,0 +1,26 @@
++import type { Ref, SVGProps } from 'react'
++import { forwardRef } from 'react'
++
++// ic_16_caret_up: залитый треугольник вершиной вверх.
++// Контур — официальный ds_ic_16_triangle_up из пресета иконок @sbol/webpage.provider.bootstrap
++const CaretUpIcon = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
++    <svg
++        xmlns="http://www.w3.org/2000/svg"
++        viewBox="0 0 16 16"
++        width="1em"
++        height="1em"
++        fill="none"
++        ref={ref}
++        {...props}
++    >
++        <path
++            fill="currentColor"
++            fillRule="evenodd"
++            d="M7.17 5.94 5.2 8.75c-.5.72-.02 1.75.83 1.75h3.93c.85 0 1.33-1.03.83-1.75L8.82 5.94a.99.99 0 0 0-1.65 0"
++        />
++    </svg>
++)
++
++const ForwardRef = forwardRef(CaretUpIcon)
++
++export default ForwardRef
+diff --git a/src/assets/components/index.ts b/src/assets/components/index.ts
+index 06e4727..3fa3615 100644
+--- a/src/assets/components/index.ts
++++ b/src/assets/components/index.ts
+@@ -2,6 +2,8 @@ export { LineForInlineWidget1, LineForInlineWidget2, LineForInlineWidget3, LineF
+ export { default as AirplaneIcon } from './airplane-icon'
+ export { default as BackgroundRuble } from './background-ruble'
+ export { default as BaggageIcon } from './baggage-icon'
++export { default as CaretDownIcon } from './caret-down-icon'
++export { default as CaretUpIcon } from './caret-up-icon'
+ export { default as CarryOnIcon } from './carry-on-icon'
+ export { Checkmark } from './checkmark'
+ export { default as CrossSmallIcon } from './cross-small-icon'
+@@ -12,8 +14,10 @@ export { default as NewClockIcon } from './new-clock-icon'
+ export { default as NewSuccessIcon } from './new-success-icon'
+ export { default as NoBaggageIcon } from './no-baggage-icon'
+ export { default as SbercardBlackIcon } from './sbercard-black-icon'
++export { default as SendMessageIcon } from './send-message-icon'
+ export { default as SpasiboIcon } from './spasibo-icon'
+ export { default as SuccessIcon } from './success-icon'
+ export { default as Tiker } from './tiker'
+ export { default as TrainIcon } from './train-icon'
+ export { default as TransferIcon } from './transfer-icon'
++export { default as TrendIcon } from './trend-icon'
+diff --git a/src/assets/components/send-message-icon.tsx b/src/assets/components/send-message-icon.tsx
+new file mode 100644
+index 0000000..d41faf9
+--- /dev/null
++++ b/src/assets/components/send-message-icon.tsx
+@@ -0,0 +1,25 @@
++import type { Ref, SVGProps } from 'react'
++import { forwardRef } from 'react'
++
++// ic_16_send_message: изогнутая стрелка «↳», маркер действия, которое отправит сообщение в чат.
++// Контур — официальный ic_16_arrow_enter из @sbol/asdk-icons 0.16.0 (ArrowEnterIcon)
++const SendMessageIcon = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
++    <svg
++        xmlns="http://www.w3.org/2000/svg"
++        viewBox="0 0 16 16"
++        width="1em"
++        height="1em"
++        fill="none"
++        ref={ref}
++        {...props}
++    >
++        <path
++            fill="currentColor"
++            d="M2.98 2c.97 0 .98 1.03.98 1.05.01.44.02.8.05 1.08.02.29.06.54.1.74.05.18.1.35.17.49.14.28.32.53.54.76q.33.33.75.54c.13.07.29.12.47.17.19.04.44.09.73.11.27.03.63.04 1.06.05h3.1L9.17 5.2c-.38-.39-.38-1.02 0-1.41a.97.97 0 0 1 1.39 0l3.79 3.85c.19.2.19.51 0 .71l-3.79 3.85a.97.97 0 0 1-1.39 0c-.38-.39-.38-1.02 0-1.41l1.77-1.8H7.8c-.48-.01-.88-.03-1.19-.05-.38-.03-.73-.09-1.02-.16-.33-.08-.63-.19-.92-.33-.23-.12-.44-.26-.65-.41-.22-.15-.4-.32-.59-.51-.36-.37-.67-.8-.9-1.27q-.21-.435-.33-.93c-.07-.3-.13-.65-.16-1.04C2.02 3.97 2 3.57 2 3.08 2 3.07 2 2 2.98 2"
++        />
++    </svg>
++)
++
++const ForwardRef = forwardRef(SendMessageIcon)
++
++export default ForwardRef
+diff --git a/src/assets/components/trend-icon.tsx b/src/assets/components/trend-icon.tsx
+new file mode 100644
+index 0000000..488fdb5
+--- /dev/null
++++ b/src/assets/components/trend-icon.tsx
+@@ -0,0 +1,25 @@
++import type { Ref, SVGProps } from 'react'
++import { forwardRef } from 'react'
++
++import CaretDownIcon from './caret-down-icon'
++import CaretUpIcon from './caret-up-icon'
++
++type TrendIconProps = SVGProps<SVGSVGElement> & {
++    /** Направление тренда: up — рост, down — падение */
++    direction: 'up' | 'down'
++}
++
++/**
++ * ic_trend: стрелка направления котировки для inline-виджетов.
++ * Внутри ic_16_caret_up и ic_16_caret_down, обрезанные по ширине до треугольника (8×16),
++ * чтобы стрелка стояла вплотную к значению, а не в квадрате 16×16.
++ */
++const TrendIcon = ({ direction, ...props }: TrendIconProps, ref: Ref<SVGSVGElement>) => {
++    const CaretIcon = direction === 'up' ? CaretUpIcon : CaretDownIcon
++
++    return <CaretIcon viewBox="4 0 8 16" width="0.5em" height="1em" ref={ref} {...props} />
++}
++
++const ForwardRef = forwardRef(TrendIcon)
++
++export default ForwardRef
+diff --git a/src/parts/inline-element/CHANGELOG.md b/src/parts/inline-element/CHANGELOG.md
+new file mode 100644
+index 0000000..b5217e8
+--- /dev/null
++++ b/src/parts/inline-element/CHANGELOG.md
+@@ -0,0 +1,23 @@
++# Change Log — inline-element
++
++## Вынесли общий action inline-виджетов
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++Схема действия по нажатию `InlineActionSchema` (`message`, `deeplink`, `externalMethod` и legacy-алиас `sendMessage`) и нормализатор `normalizeInlineAction` переехали из виджета `inline` в `inline-element`. Теперь это общий контракт виджетов `inline`, `link` и `send-message`. Нормализатор принимает имя виджета (`from`) и опциональный `inputType` для сообщений. Контракт `inline` не изменился.
++
++## Добавили базовый строчный элемент для inline-виджетов
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++`InlineElement` — общая основа виджетов `link`, `send-message` и `inline-ticket`. Раскладка по макету: иконка 16×16 слева в отдельной колонке, текст, строки переноса которого выравниваются по началу текста, а не уходят под иконку, и прямая линия-подчёркивание под каждой строкой текста (в отличие от рукописной линии `inline`, по макету). Дополнительно есть слот справа от текста, состояния hover и pressed для кликабельного элемента и CSS-переменные для цвета текста, иконки и линии.
++
++`InlineIcon` показывает системную иконку по имени или скруглённую картинку по URL; при ошибке загрузки — `ImageErrorIcon`.
+diff --git a/src/parts/inline-element/index.ts b/src/parts/inline-element/index.ts
+new file mode 100644
+index 0000000..949aa98
+--- /dev/null
++++ b/src/parts/inline-element/index.ts
+@@ -0,0 +1,5 @@
++// Zod-схемы иконки и action импортируются напрямую из ./inline-element.schema, чтобы не попадать в runtime-чанки виджетов
++export { InlineElement, type InlineElementProps } from './inline-element'
++export { InlineIcon } from './inline-icon'
++export { normalizeInlineAction, type NormalizeInlineActionOptions } from './inline-action'
++export type { InlineAction, InlineIconData } from './inline-element.schema'
+diff --git a/src/widgets/inline/inline.actions.ts b/src/parts/inline-element/inline-action.ts
+similarity index 56%
+rename from src/widgets/inline/inline.actions.ts
+rename to src/parts/inline-element/inline-action.ts
+index fea9b88..7758c44 100644
+--- a/src/widgets/inline/inline.actions.ts
++++ b/src/parts/inline-element/inline-action.ts
+@@ -1,6 +1,8 @@
+-import { type SystemAction } from '#/hooks/use-system-actions'
++// Только типы: runtime-код хуков и zod-схема не должны попадать в чанки виджетов через этот модуль
++import type { InputType } from '#/hooks/use-send-message'
++import type { SystemAction } from '#/hooks/use-system-actions'
+ 
+-import { type InlineAction } from './inline.schema'
++import type { InlineAction } from './inline-element.schema'
+ 
+ type InlineActionType = InlineAction['type']
+ type SystemActionType = SystemAction['type']
+@@ -12,6 +14,13 @@ type InlineExternalMethodCallbackType = NonNullable<
+     InlineExternalMethodAction['payload']['externalMethodSettings']['callbackType']
+ >
+ 
++export type NormalizeInlineActionOptions = {
++    /** Имя виджета: попадает в from системного действия и в name function_results сообщения */
++    from: string
++    /** Тип ввода для действия message. Если не передан, useSendMessage подставит значение по умолчанию */
++    inputType?: InputType
++}
++
+ const ACTION_TYPE_MAP: Record<InlineActionType, SystemActionType> = {
+     message: 'message',
+     sendMessage: 'message',
+@@ -27,7 +36,11 @@ const CALLBACK_TYPE_MAP: Record<InlineExternalMethodCallbackType, SystemExternal
+     externalMethod: 'externalMethod'
+ }
+ 
+-export const normalizeInlineAction = (inlineAction: InlineAction): SystemAction => {
++/** Приводит action inline-виджета к системному действию useSystemActions */
++export const normalizeInlineAction = (
++    inlineAction: InlineAction,
++    { from, inputType }: NormalizeInlineActionOptions
++): SystemAction => {
+     const type = ACTION_TYPE_MAP[inlineAction.type]
+ 
+     if (inlineAction.type === 'externalMethod') {
+@@ -35,7 +48,7 @@ export const normalizeInlineAction = (inlineAction: InlineAction): SystemAction
+ 
+         return {
+             type,
+-            from: 'inline',
++            from,
+             payload: {
+                 ...inlineAction.payload,
+                 externalMethodSettings: {
+@@ -46,9 +59,17 @@ export const normalizeInlineAction = (inlineAction: InlineAction): SystemAction
+         } as SystemAction
+     }
+ 
++    if (type === 'message' && inputType) {
++        return {
++            type,
++            from,
++            payload: { ...inlineAction.payload, inputType }
++        } as SystemAction
++    }
++
+     return {
+         type,
+-        from: 'inline',
++        from,
+         payload: inlineAction.payload
+     } as SystemAction
+ }
+diff --git a/src/parts/inline-element/inline-element.module.css b/src/parts/inline-element/inline-element.module.css
+new file mode 100644
+index 0000000..f185075
+--- /dev/null
++++ b/src/parts/inline-element/inline-element.module.css
+@@ -0,0 +1,129 @@
++.root {
++    --inline-element-underline-height: var(--line-thickness-default);
++    --inline-element-underline-gap: var(--spacing-gap-vertical-2xs);
++    --inline-element-line-height: var(--font-text-m-regular-line-height);
++    --inline-element-icon-offset: calc((var(--inline-element-line-height) - var(--icon-size-s)) / 2);
++
++    position: relative;
++    display: inline-block;
++    box-sizing: border-box;
++    max-width: 100%;
++    margin: 0;
++    padding: 0;
++    border: 0;
++    background: transparent;
++    color: var(--inline-element-text-color, var(--color-text-standard-general-primary));
++    font: var(--font-text-m-regular);
++    letter-spacing: 0;
++    text-align: inherit;
++}
++
++.withUnderline {
++    --inline-element-line-height: calc(
++        var(--font-text-m-regular-line-height) + var(--inline-element-underline-height) +
++            var(--inline-element-underline-gap)
++    );
++}
++
++.clickable {
++    cursor: pointer;
++}
++
++@media (hover: hover) {
++    .clickable:hover {
++        opacity: 0.64;
++    }
++}
++
++.clickable:active {
++    opacity: 0.78;
++}
++
++.root:focus-visible {
++    border-radius: var(--corner-radius-3xs);
++    outline: var(--line-thickness-default) solid var(--color-stroke-standard-brand-main);
++}
++
++.content {
++    position: relative;
++    display: inline-flex;
++    align-items: baseline;
++    max-width: 100%;
++}
++
++.leading {
++    position: relative;
++    display: inline-flex;
++    flex: 0 0 auto;
++    align-self: flex-start;
++    align-items: center;
++    justify-content: center;
++    width: var(--icon-size-s);
++    height: var(--icon-size-s);
++    margin-top: var(--inline-element-icon-offset);
++    margin-right: var(--spacing-gap-horizontal-xs);
++    color: var(--inline-element-leading-color, var(--color-icon-standard-general-primary));
++}
++
++.leading > :global(svg) {
++    display: block;
++    width: 100%;
++    height: 100%;
++}
++
++/* Иконка занимает свою колонку: строки переноса выравниваются по началу текста, а не уходят под иконку */
++.textWrapper {
++    position: relative;
++    display: block;
++    min-width: 0;
++    line-height: var(--inline-element-line-height);
++}
++
++.text {
++    display: inline;
++    color: currentColor;
++    line-height: var(--inline-element-line-height);
++    overflow-wrap: anywhere;
++    white-space: normal;
++}
++
++.trailing {
++    display: inline-flex;
++    align-items: center;
++    height: var(--inline-element-line-height);
++    margin-left: var(--spacing-gap-horizontal-xs);
++    vertical-align: top;
++    white-space: nowrap;
++}
++
++/* Прямая линия под строкой текста; позиция и ширина задаются замером строк */
++.line {
++    position: absolute;
++    display: block;
++    height: var(--inline-element-underline-height);
++    background-color: var(--inline-element-line-color, var(--color-stroke-standard-general-secondary));
++    pointer-events: none;
++}
++
++.image {
++    display: inline-flex;
++    width: 100%;
++    height: 100%;
++    overflow: hidden;
++    border-radius: var(--corner-radius-round);
++}
++
++.image .remoteIcon {
++    display: inline-flex;
++    align-items: center;
++    justify-content: center;
++    width: 100%;
++    height: 100%;
++    color: currentColor;
++}
++
++.image .remoteIcon :global(svg) {
++    display: block;
++    width: 100%;
++    height: 100%;
++}
+diff --git a/src/parts/inline-element/inline-element.schema.ts b/src/parts/inline-element/inline-element.schema.ts
+new file mode 100644
+index 0000000..1bcadb1
+--- /dev/null
++++ b/src/parts/inline-element/inline-element.schema.ts
+@@ -0,0 +1,79 @@
++import { z } from 'zod'
++
++import { SYSTEM_ICON_NAMES } from '#/parts/system-icon/icon-registry'
++
++const InlineIconByUrlSchema = z.object({
++    type: z.literal('url'),
++    url: z
++        .string()
++        .describe('URL картинки: логотип компании или сервиса. Отображается кругом 16×16 слева от текста')
++})
++
++const InlineIconByNameSchema = z.object({
++    type: z.literal('name'),
++    name: z.enum(SYSTEM_ICON_NAMES).describe('Название системной иконки')
++})
++
++/** Иконка слева от текста inline-виджета: картинка по URL или системная иконка по имени */
++export const InlineIconSchema = z.discriminatedUnion('type', [InlineIconByUrlSchema, InlineIconByNameSchema])
++
++export type InlineIconData = z.infer<typeof InlineIconSchema>
++
++const ArbitraryObjectSchema = z.object({}).passthrough()
++
++const MessageAction = z.object({
++    type: z.literal('message'),
++    payload: z.object({
++        text: z.string().describe('Текст сообщения, которое будет отправлено в чат'),
++        content: z.string().optional().nullable().describe('Опциональный content для function_results')
++    })
++})
++
++const LegacySendMessageAction = z.object({
++    type: z.literal('sendMessage'),
++    payload: z.object({
++        text: z.string().describe('Текст сообщения, которое будет отправлено в чат'),
++        content: z.string().optional().nullable().describe('Опциональный content для function_results')
++    })
++})
++
++const DeeplinkAction = z.object({
++    type: z.literal('deeplink'),
++    payload: z.object({
++        url: z.string().describe('URL или deeplink для открытия')
++    })
++})
++
++const ExternalMethodAction = z.object({
++    type: z.literal('externalMethod'),
++    payload: z.object({
++        externalMethodSettings: z.object({
++            methodName: z.string().describe('Название внешнего метода'),
++            methodParams: ArbitraryObjectSchema.describe('Параметры внешнего метода'),
++            callbackType: z
++                .enum([
++                    'none',
++                    'message',
++                    'deeplink',
++                    'externalMethod',
++                    'sendMessage'
++                ])
++                .optional()
++                .default('none')
++                .describe('Тип callback-действия после выполнения внешнего метода')
++        })
++    })
++})
++
++/**
++ * Действие по нажатию на inline-виджет: message, deeplink или externalMethod.
++ * Общий контракт виджетов inline, link и send-message; legacy-тип sendMessage сохранён как алиас message
++ */
++export const InlineActionSchema = z.discriminatedUnion('type', [
++    MessageAction,
++    LegacySendMessageAction,
++    DeeplinkAction,
++    ExternalMethodAction
++])
++
++export type InlineAction = z.infer<typeof InlineActionSchema>
+diff --git a/src/parts/inline-element/inline-element.test.tsx b/src/parts/inline-element/inline-element.test.tsx
+new file mode 100644
+index 0000000..daa8a9d
+--- /dev/null
++++ b/src/parts/inline-element/inline-element.test.tsx
+@@ -0,0 +1,57 @@
++import { fireEvent, render, screen } from '@testing-library/react'
++import { describe, expect, it, vi } from 'vitest'
++
++import { InlineElement } from './inline-element'
++import Styles from './inline-element.module.css'
++import { areLineRectsEqual } from './use-inline-underline'
++
++describe('InlineElement', () => {
++    it('без onClick рендерится как текст, а не кнопка', () => {
++        const { container } = render(<InlineElement text="Сбербанк" trailing="2,4%" />)
++
++        expect(screen.queryByRole('button')).not.toBeInTheDocument()
++        expect(container.firstElementChild?.tagName).toBe('SPAN')
++        expect(screen.getByText('2,4%')).toHaveClass(Styles.trailing)
++    })
++
++    it('с onClick рендерится кнопкой и вызывает обработчик', () => {
++        const onClick = vi.fn()
++
++        render(<InlineElement text="проанализировать траты" underline onClick={onClick} />)
++        const button = screen.getByRole('button', { name: 'проанализировать траты' })
++
++        fireEvent.click(button)
++
++        expect(onClick).toHaveBeenCalledTimes(1)
++        expect(button).toHaveClass(Styles.clickable)
++        expect(button).toHaveClass(Styles.withUnderline)
++    })
++
++    it('заблокированный элемент не вызывает обработчик и не получает hover-состояние', () => {
++        const onClick = vi.fn()
++
++        render(<InlineElement text="Рейтинг" role="link" disabled onClick={onClick} />)
++        const link = screen.getByRole('link', { name: 'Рейтинг' })
++
++        fireEvent.click(link)
++
++        expect(onClick).not.toHaveBeenCalled()
++        expect(link).not.toHaveClass(Styles.clickable)
++    })
++
++    it('скрывает иконку слева от скринридеров', () => {
++        const { container } = render(<InlineElement text="Рейтинг" leading={<svg data-testid="icon" />} />)
++
++        expect(container.querySelector(`.${Styles.leading}`)).toHaveAttribute('aria-hidden', 'true')
++    })
++})
++
++describe('areLineRectsEqual', () => {
++    it('считает строки равными с точностью до полупикселя', () => {
++        expect(areLineRectsEqual([{ left: 0, top: 24, width: 100 }], [{ left: 0.4, top: 24.2, width: 100.5 }])).toBe(
++            true
++        )
++        expect(areLineRectsEqual([{ left: 0, top: 24, width: 100 }], [{ left: 0, top: 30, width: 100 }])).toBe(false)
++        expect(areLineRectsEqual([{ left: 0, top: 24, width: 100 }], [])).toBe(false)
++    })
++})
+diff --git a/src/parts/inline-element/inline-element.tsx b/src/parts/inline-element/inline-element.tsx
+new file mode 100644
+index 0000000..e00a91e
+--- /dev/null
++++ b/src/parts/inline-element/inline-element.tsx
+@@ -0,0 +1,102 @@
++import { useRef, type ReactNode } from 'react'
++import clsx from 'clsx'
++
++import Styles from './inline-element.module.css'
++import { useInlineUnderline } from './use-inline-underline'
++
++export type InlineElementProps = {
++    /** Основной текст элемента */
++    text: string
++    /** Узел слева от текста в квадрате --icon-size-s: иконка или картинка. Скрыт от скринридеров */
++    leading?: ReactNode
++    /** Узел сразу после текста в той же строке, например изменение котировки */
++    trailing?: ReactNode
++    /** Рисует прямую линию под каждой строкой текста */
++    underline?: boolean
++    /** Обработчик нажатия. Если передан, элемент рендерится как button */
++    onClick?: () => void
++    /** Блокирует нажатие. Внешний вид задаёт виджет через CSS-переменные */
++    disabled?: boolean
++    /** Роль кнопки, если по смыслу это ссылка */
++    role?: 'link'
++    /** Класс корневого элемента, через него виджет задаёт CSS-переменные цвета */
++    className?: string
++}
++
++/**
++ * Базовый строчный элемент inline-виджетов: иконка слева, подчёркнутый текст
++ * и дополнительный узел справа. Иконка стоит в отдельной колонке, строки переноса выравниваются
++ * по началу текста; линия прямая, по макету.
++ *
++ * Цвета переопределяются CSS-переменными на `className`:
++ * - `--inline-element-text-color` — текст, по умолчанию `--color-text-standard-general-primary`;
++ * - `--inline-element-leading-color` — иконка слева, по умолчанию `--color-icon-standard-general-primary`;
++ * - `--inline-element-line-color` — линия, по умолчанию `--color-stroke-standard-general-secondary`.
++ */
++export const InlineElement = ({
++    text,
++    leading,
++    trailing,
++    underline = false,
++    onClick,
++    disabled = false,
++    role,
++    className
++}: InlineElementProps) => {
++    const textWrapperRef = useRef<HTMLSpanElement>(null)
++    const textRef = useRef<HTMLSpanElement>(null)
++    const { lineRects } = useInlineUnderline({
++        showUnderline: underline,
++        text,
++        textElementRef: textRef,
++        textWrapperRef
++    })
++    const rootClassName = clsx(
++        Styles.root,
++        underline && Styles.withUnderline,
++        onClick && !disabled && Styles.clickable,
++        className
++    )
++
++    const lineNodes = underline
++        ? lineRects.map((lineRect) => (
++              <span
++                  key={[Math.round(lineRect.left), Math.round(lineRect.top), Math.round(lineRect.width)].join('-')}
++                  aria-hidden="true"
++                  className={Styles.line}
++                  style={{
++                      left: lineRect.left,
++                      top: lineRect.top,
++                      width: lineRect.width
++                  }}
++              />
++          ))
++        : null
++
++    const content = (
++        <span className={Styles.content}>
++            {leading ? (
++                <span aria-hidden="true" className={Styles.leading}>
++                    {leading}
++                </span>
++            ) : null}
++            <span className={Styles.textWrapper} ref={textWrapperRef}>
++                <span className={Styles.text} ref={textRef}>
++                    {text}
++                </span>
++                {trailing ? <span className={Styles.trailing}>{trailing}</span> : null}
++                {lineNodes}
++            </span>
++        </span>
++    )
++
++    if (onClick) {
++        return (
++            <button type="button" role={role} className={rootClassName} disabled={disabled} onClick={onClick}>
++                {content}
++            </button>
++        )
++    }
++
++    return <span className={rootClassName}>{content}</span>
++}
+diff --git a/src/parts/inline-element/inline-icon.tsx b/src/parts/inline-element/inline-icon.tsx
+new file mode 100644
+index 0000000..52f37bd
+--- /dev/null
++++ b/src/parts/inline-element/inline-icon.tsx
+@@ -0,0 +1,30 @@
++import ImageErrorIcon from '#/assets/components/image-error-icon'
++import { IconLoader } from '#/parts/icon-loader'
++import { getSystemIconComponent } from '#/parts/system-icon/icon-registry'
++
++import Styles from './inline-element.module.css'
++import type { InlineIconData } from './inline-element.schema'
++
++type InlineIconProps = {
++    icon: InlineIconData
++}
++
++const fallbackIcon = <ImageErrorIcon color="currentColor" />
++
++/**
++ * Иконка для слота leading: системная по имени или скруглённая картинка по URL.
++ * Если картинка не загрузилась или имя неизвестно, показывает ImageErrorIcon.
++ */
++export const InlineIcon = ({ icon }: InlineIconProps) => {
++    if (icon.type === 'url') {
++        return (
++            <span className={Styles.image}>
++                <IconLoader as="span" iconUrl={icon.url} className={Styles.remoteIcon} fallbackIcon={fallbackIcon} />
++            </span>
++        )
++    }
++
++    const IconComponent = getSystemIconComponent(icon.name)
++
++    return IconComponent ? <IconComponent color="currentColor" /> : fallbackIcon
++}
+diff --git a/src/parts/inline-element/use-inline-underline.ts b/src/parts/inline-element/use-inline-underline.ts
+new file mode 100644
+index 0000000..89d618e
+--- /dev/null
++++ b/src/parts/inline-element/use-inline-underline.ts
+@@ -0,0 +1,152 @@
++// Замер строк повторяет src/widgets/inline/use-inline-underline.ts:
++// виджеты не импортируют друг друга, поэтому база inline-виджетов вынесена в part.
++// В отличие от inline, линия прямая (по макету), без случайных рукописных вариантов.
++import { useCallback, useLayoutEffect, useState, type RefObject } from 'react'
++
++export type InlineLineRect = {
++    left: number
++    top: number
++    width: number
++}
++
++type UseInlineUnderlineParams = {
++    showUnderline: boolean
++    text: string
++    textElementRef: RefObject<HTMLElement>
++    textWrapperRef: RefObject<HTMLElement>
++}
++
++const LINE_TEXT_GAP_PX = 2
++const LINE_RECT_EPSILON_PX = 0.5
++const LINE_TOP_EPSILON_PX = 1
++
++export const areLineRectsEqual = (currentRects: InlineLineRect[], nextRects: InlineLineRect[]) =>
++    currentRects.length === nextRects.length &&
++    currentRects.every((rect, index) => {
++        const nextRect = nextRects[index]
++
++        return (
++            nextRect &&
++            Math.abs(rect.left - nextRect.left) <= LINE_RECT_EPSILON_PX &&
++            Math.abs(rect.top - nextRect.top) <= LINE_RECT_EPSILON_PX &&
++            Math.abs(rect.width - nextRect.width) <= LINE_RECT_EPSILON_PX
++        )
++    })
++
++// Прямоугольники строк текста относительно контейнера: по одному на каждую визуальную строку переноса
++export const getTextLineRects = (textElement: HTMLElement, contentElement: HTMLElement): InlineLineRect[] => {
++    const range = document.createRange()
++
++    if (!range.getClientRects) {
++        return []
++    }
++
++    range.selectNodeContents(textElement)
++
++    const contentRect = contentElement.getBoundingClientRect()
++    const rects = [...range.getClientRects()]
++        .filter((rect) => rect.width > 0 && rect.height > 0)
++        .sort((a, b) => (Math.abs(a.top - b.top) > LINE_TOP_EPSILON_PX ? a.top - b.top : a.left - b.left))
++    const groupedRects: Array<{ top: number; bottom: number; left: number; right: number }> = []
++
++    rects.forEach((rect) => {
++        const lastRect = groupedRects[groupedRects.length - 1]
++
++        if (lastRect && Math.abs(lastRect.top - rect.top) <= LINE_TOP_EPSILON_PX) {
++            lastRect.bottom = Math.max(lastRect.bottom, rect.bottom)
++            lastRect.left = Math.min(lastRect.left, rect.left)
++            lastRect.right = Math.max(lastRect.right, rect.right)
++            return
++        }
++
++        groupedRects.push({
++            top: rect.top,
++            bottom: rect.bottom,
++            left: rect.left,
++            right: rect.right
++        })
++    })
++
++    return groupedRects.map((rect) => ({
++        left: rect.left - contentRect.left,
++        top: rect.bottom - contentRect.top + LINE_TEXT_GAP_PX,
++        width: rect.right - rect.left
++    }))
++}
++
++// Измеряет строки текста, чтобы нарисовать прямую линию под каждой строкой переноса
++export const useInlineUnderline = ({
++    showUnderline,
++    text,
++    textElementRef,
++    textWrapperRef
++}: UseInlineUnderlineParams) => {
++    const [lineRects, setLineRects] = useState<InlineLineRect[]>([])
++
++    const updateLineRects = useCallback(() => {
++        if (!showUnderline || !textWrapperRef.current || !textElementRef.current) {
++            setLineRects((currentRects) => (currentRects.length === 0 ? currentRects : []))
++            return
++        }
++
++        const nextRects = getTextLineRects(textElementRef.current, textWrapperRef.current)
++
++        setLineRects((currentRects) => (areLineRectsEqual(currentRects, nextRects) ? currentRects : nextRects))
++    }, [showUnderline, textElementRef, textWrapperRef])
++
++    useLayoutEffect(() => {
++        let isActive = true
++        let animationFrameId: number | undefined
++
++        const scheduleLineRectsUpdate = () => {
++            if (!isActive) {
++                return
++            }
++
++            if (animationFrameId !== undefined) {
++                cancelAnimationFrame(animationFrameId)
++            }
++
++            animationFrameId = requestAnimationFrame(updateLineRects)
++        }
++
++        scheduleLineRectsUpdate()
++
++        const observedElement = textWrapperRef.current
++
++        if (!showUnderline || !observedElement) {
++            return () => {
++                isActive = false
++
++                if (animationFrameId !== undefined) {
++                    cancelAnimationFrame(animationFrameId)
++                }
++            }
++        }
++
++        const resizeObserver =
++            typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(scheduleLineRectsUpdate)
++
++        resizeObserver?.observe(observedElement)
++        window.addEventListener('resize', scheduleLineRectsUpdate)
++
++        if ('fonts' in document) {
++            void (async () => {
++                await document.fonts.ready
++                scheduleLineRectsUpdate()
++            })()
++        }
++
++        return () => {
++            isActive = false
++            resizeObserver?.disconnect()
++            window.removeEventListener('resize', scheduleLineRectsUpdate)
++
++            if (animationFrameId !== undefined) {
++                cancelAnimationFrame(animationFrameId)
++            }
++        }
++    }, [showUnderline, text, textWrapperRef, updateLineRects])
++
++    return { lineRects }
++}
+diff --git a/src/widgets/inline-ticket/CHANGELOG.md b/src/widgets/inline-ticket/CHANGELOG.md
+new file mode 100644
+index 0000000..63bfc9b
+--- /dev/null
++++ b/src/widgets/inline-ticket/CHANGELOG.md
+@@ -0,0 +1,11 @@
++# История изменений
++
++## Добавили виджет InlineTicket
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++Новый inline-виджет для динамики ценной бумаги внутри текста ответа. Показывает логотип или иконку, название или тикер и изменение цены: при росте значение зелёное со стрелкой вверх, при падении — красное со стрелкой вниз, без изменений — цвета основного текста. Если котировка не получена, вместо неё отображается серое сообщение «Данные не пришли».
+diff --git a/src/widgets/inline-ticket/README.md b/src/widgets/inline-ticket/README.md
+new file mode 100644
+index 0000000..fd4ef4b
+--- /dev/null
++++ b/src/widgets/inline-ticket/README.md
+@@ -0,0 +1,54 @@
++# InlineTicket
++
++InlineTicket показывает динамику ценной бумаги прямо в тексте ответа: логотип, название или тикер и изменение цены.
++
++Виджет построен на общей основе inline-виджетов [`inline-element`](../../parts/inline-element/). Иконка слева стоит в отдельной колонке: при переносе строки выравниваются по началу текста, а не уходят под иконку. Стрелка направления — иконка `ic_trend` ([`trend-icon`](../../assets/components/trend-icon.tsx)): внутри `ic_16_caret_up` и `ic_16_caret_down`, обрезанные по ширине до треугольника, чтобы стрелка стояла вплотную к значению.
++
++## Рендер внутри текста
++
++Чтобы виджет отрисовался внутри текстового потока, в `payload` нужно передать `display: "inline"`.
++
++```json
++{
++    "type": "widget",
++    "widget_name": "inline_ticket",
++    "widget_version": 1,
++    "payload": {
++        "shimmer_size": "S",
++        "display": "inline",
++        "data": {
++            "text": "Сбербанк",
++            "change": "2,4%",
++            "kind": "Positive"
++        }
++    }
++}
++```
++
++## Состояния
++
++| `kind` | Значение справа |
++| --- | --- |
++| `Neutral` (по умолчанию) | цвет основного текста, без стрелки |
++| `Positive` | зелёное, стрелка вверх |
++| `Negative` | красное, стрелка вниз |
++| `Error` | вместо названия и значения — серые иконка и текст «Данные не пришли» |
++
++`change` передаётся без знака: направление задаёт `kind`. Если `change` пустой или не передан, виджет показывает состояние `Error`.
++
++## Иконка слева
++
++По макету слева может не быть ничего, быть иконка или картинка:
++
++- без поля `icon` — только текст;
++- `icon.type = "url"` — картинка по URL, например логотип компании. Отображается кругом 16×16;
++- `icon.type = "name"` — системная иконка по имени.
++
++## Доступность
++
++Цвет и стрелка не озвучиваются, поэтому у стрелки есть подпись «рост» или «падение»: скринридер читает «Сбербанк, рост, 2,4%».
++
++## Ограничения
++
++- Только новая дизайн-конфигурация (`v2_only: true`), фоллбэка на старые токены нет.
++- Виджет не кликабельный: в макете нет действия по нажатию.
+diff --git a/src/widgets/inline-ticket/accessibility.test.ts b/src/widgets/inline-ticket/accessibility.test.ts
+new file mode 100644
+index 0000000..63eacc7
+--- /dev/null
++++ b/src/widgets/inline-ticket/accessibility.test.ts
+@@ -0,0 +1,15 @@
++import { describe, expect, it } from 'vitest'
++
++import { getTrendLabel } from './accessibility'
++
++describe('inline-ticket accessibility helpers', () => {
++    it('озвучивает направление изменения словом', () => {
++        expect(getTrendLabel('Positive')).toBe('рост')
++        expect(getTrendLabel('Negative')).toBe('падение')
++    })
++
++    it('не добавляет подпись, когда стрелки нет', () => {
++        expect(getTrendLabel('Neutral')).toBeUndefined()
++        expect(getTrendLabel('Error')).toBeUndefined()
++    })
++})
+diff --git a/src/widgets/inline-ticket/accessibility.ts b/src/widgets/inline-ticket/accessibility.ts
+new file mode 100644
+index 0000000..1859287
+--- /dev/null
++++ b/src/widgets/inline-ticket/accessibility.ts
+@@ -0,0 +1,17 @@
++import type { TicketKind } from './inline-ticket.schema'
++
++/** Текст состояния, когда котировка не получена */
++export const ERROR_TEXT = 'Данные не пришли'
++
++const TREND_LABEL: Partial<Record<TicketKind, string>> = {
++    Positive: 'рост',
++    Negative: 'падение'
++}
++
++/**
++ * Подпись стрелки направления для скринридеров: цвет и стрелка не озвучиваются,
++ * поэтому направление изменения передаётся словом перед значением.
++ * @param {TicketKind} kind - направление изменения котировки
++ * @returns {string | undefined} «рост», «падение» или undefined, если стрелки нет
++ */
++export const getTrendLabel = (kind: TicketKind): string | undefined => TREND_LABEL[kind]
+diff --git a/src/widgets/inline-ticket/index.ts b/src/widgets/inline-ticket/index.ts
+new file mode 100644
+index 0000000..3ad5732
+--- /dev/null
++++ b/src/widgets/inline-ticket/index.ts
+@@ -0,0 +1 @@
++export { default } from './inline-ticket'
+diff --git a/src/widgets/inline-ticket/inline-ticket.examples.ts b/src/widgets/inline-ticket/inline-ticket.examples.ts
+new file mode 100644
+index 0000000..fd3eece
+--- /dev/null
++++ b/src/widgets/inline-ticket/inline-ticket.examples.ts
+@@ -0,0 +1,49 @@
++import type { StoryExample } from '#/storybook/widget-story-helpers'
++
++import type { PayloadData } from './inline-ticket.schema'
++
++export const examples: StoryExample<PayloadData>[] = [
++    {
++        name: 'InlineTicketPositive',
++        user_prompt: 'Как сегодня торгуются акции Сбербанка?',
++        notes: 'Рост: значение зелёное со стрелкой вверх; знак «+» в change не нужен',
++        params: {
++            text: 'Сбербанк',
++            change: '2,4%',
++            kind: 'Positive',
++            icon: {
++                type: 'url',
++                url: 'https://web-si20.sberbank.ru:1443/images/company_logo_small/7205_small.png'
++            }
++        }
++    },
++    {
++        name: 'InlineTicketNegative',
++        user_prompt: 'Что сейчас с акциями Газпрома?',
++        notes: 'Падение: значение красное со стрелкой вниз; знак «−» в change не нужен',
++        params: {
++            text: 'GAZP',
++            change: '1,3%',
++            kind: 'Negative'
++        }
++    },
++    {
++        name: 'InlineTicketNeutral',
++        user_prompt: 'Изменилась ли сегодня цена акций Яндекса?',
++        notes: 'Без изменений: значение цвета основного текста, без стрелки',
++        params: {
++            text: 'YDEX',
++            change: '0,0%',
++            kind: 'Neutral'
++        }
++    },
++    {
++        name: 'InlineTicketError',
++        user_prompt: 'Покажи котировку Лукойла',
++        notes: 'Котировка не получена: вместо названия и значения показывается «Данные не пришли»',
++        params: {
++            text: 'LKOH',
++            kind: 'Error'
++        }
++    }
++]
+diff --git a/src/widgets/inline-ticket/inline-ticket.meta.ts b/src/widgets/inline-ticket/inline-ticket.meta.ts
+new file mode 100644
+index 0000000..0904fb6
+--- /dev/null
++++ b/src/widgets/inline-ticket/inline-ticket.meta.ts
+@@ -0,0 +1,43 @@
++export const widgetConfig = {
++    shimmer_size: 'S' as const,
++    namespace: 'widgetStore' as const,
++    // Версия будет обновлена при релизе
++    version: 1,
++
++    // Виджет использует только V2 дизайн и не имеет фоллбэка на старый дизайн
++    v2_only: true
++} as const
++
++export const widgetBuildMeta = {
++    pixsoLink: '',
++    agents: [
++        {
++            name: 'widgetStore',
++            version: 1,
++            environment: 'Разработка',
++            jira: ''
++        }
++    ],
++    display_description:
++        'Котировка ценной бумаги внутри текста ответа: логотип, название или тикер и изменение цены — ' +
++        'зелёное со стрелкой вверх при росте, красное со стрелкой вниз при падении. ' +
++        'Используй, когда в тексте ответа упоминается акция и её динамика.'
++} as const
++
++export const widgetDevMeta = {
++    dev_status: 'alpha',
++    documentation_link: '',
++    known_issues: ['Отрисовка виджета внутри текста сообщения поддерживается начиная с версии SDK 1.1.12.'] as string[],
++    features: []
++} as const
++
++export const widgetMeta = {
++    ...widgetConfig,
++    ...widgetBuildMeta,
++    ...widgetDevMeta
++} as const
++
++export type WidgetConfig = typeof widgetConfig
++export type WidgetBuildMeta = typeof widgetBuildMeta
++export type WidgetDevMeta = typeof widgetDevMeta
++export type WidgetMeta = typeof widgetMeta
+diff --git a/src/widgets/inline-ticket/inline-ticket.module.css b/src/widgets/inline-ticket/inline-ticket.module.css
+new file mode 100644
+index 0000000..177a6ab
+--- /dev/null
++++ b/src/widgets/inline-ticket/inline-ticket.module.css
+@@ -0,0 +1,33 @@
++.change {
++    display: inline-flex;
++    align-items: center;
++}
++
++.positive {
++    color: var(--color-text-standard-status-success);
++}
++
++.negative {
++    color: var(--color-text-standard-status-error);
++}
++
++/* ic_trend: колонка шириной в треугольник, стрелка стоит вплотную к значению */
++.trend {
++    display: inline-flex;
++    flex: 0 0 auto;
++    width: calc(var(--icon-size-s) / 2);
++    height: var(--icon-size-s);
++    margin-right: var(--spacing-gap-horizontal-2xs);
++}
++
++.trend > :global(svg) {
++    display: block;
++    width: 100%;
++    height: 100%;
++}
++
++/* Котировка не получена: серые иконка и текст по макету */
++.error {
++    --inline-element-text-color: var(--color-text-standard-general-secondary);
++    --inline-element-leading-color: var(--color-icon-standard-general-secondary);
++}
+diff --git a/src/widgets/inline-ticket/inline-ticket.schema.ts b/src/widgets/inline-ticket/inline-ticket.schema.ts
+new file mode 100644
+index 0000000..6afa22b
+--- /dev/null
++++ b/src/widgets/inline-ticket/inline-ticket.schema.ts
+@@ -0,0 +1,29 @@
++import { z } from 'zod'
++
++import { InlineIconSchema } from '#/parts/inline-element/inline-element.schema'
++
++export const TicketKindSchema = z.enum(['Neutral', 'Positive', 'Negative', 'Error'])
++
++export const PayloadDataSchema = z
++    .object({
++        text: z.string().describe('Название компании или тикер ценной бумаги, например «Сбербанк» или «SBER»'),
++        change: z
++            .string()
++            .optional()
++            .describe(
++                'Изменение цены без знака, например «2,4%». Направление задаётся полем kind. ' +
++                    'Если не передано, вместо котировки показывается «Данные не пришли»'
++            ),
++        kind: TicketKindSchema.optional().describe(
++            'Направление изменения: Neutral — без изменений, Positive — рост (зелёный текст и стрелка вверх), ' +
++                'Negative — падение (красный текст и стрелка вниз), Error — данные о котировке не получены. По умолчанию Neutral'
++        ),
++        icon: InlineIconSchema.optional().describe('Логотип компании или иконка слева от названия')
++    })
++    .describe(
++        'Котировка ценной бумаги внутри текста ответа: логотип, название или тикер и изменение цены, ' +
++            'окрашенное по направлению динамики'
++    )
++
++export type TicketKind = z.infer<typeof TicketKindSchema>
++export type PayloadData = z.infer<typeof PayloadDataSchema>
+diff --git a/src/widgets/inline-ticket/inline-ticket.stories.tsx b/src/widgets/inline-ticket/inline-ticket.stories.tsx
+new file mode 100644
+index 0000000..40135d7
+--- /dev/null
++++ b/src/widgets/inline-ticket/inline-ticket.stories.tsx
+@@ -0,0 +1,48 @@
++import type { Meta } from '@storybook/react'
++
++import {
++    buildArgTypesFromZod,
++    createFullWidgetMetaStory,
++    createStoriesFromExamples,
++    createWidgetMetaStoryWithSchema,
++    extractSchemaDescription
++} from '#/storybook'
++
++import InlineTicket from './inline-ticket'
++import { examples } from './inline-ticket.examples'
++import { widgetMeta } from './inline-ticket.meta'
++import { PayloadDataSchema } from './inline-ticket.schema'
++
++const schemaDescription = extractSchemaDescription(PayloadDataSchema)
++
++const meta = {
++    title: 'widgets/InlineTicket',
++    component: InlineTicket,
++    argTypes: buildArgTypesFromZod(PayloadDataSchema),
++    parameters: {
++        layout: 'centered',
++        docs: {
++            description: {
++                component: `[Макет в Pixso](${widgetMeta.pixsoLink})\n\n${schemaDescription}`
++            }
++        }
++    }
++} satisfies Meta<typeof InlineTicket>
++
++export default meta
++
++const generatedStories = createStoriesFromExamples(examples, PayloadDataSchema)
++
++export const InlineTicketPositive = generatedStories.InlineTicketPositive
++export const InlineTicketNegative = generatedStories.InlineTicketNegative
++export const InlineTicketNeutral = generatedStories.InlineTicketNeutral
++export const InlineTicketError = generatedStories.InlineTicketError
++
++export const WidgetMetadata = createWidgetMetaStoryWithSchema(widgetMeta, PayloadDataSchema)
++
++export const GeneratedWidgetMetaJson = createFullWidgetMetaStory({
++    toolName: 'inline_ticket',
++    widgetMeta,
++    schema: PayloadDataSchema,
++    stories: Object.values(generatedStories)
++})
+diff --git a/src/widgets/inline-ticket/inline-ticket.test.tsx b/src/widgets/inline-ticket/inline-ticket.test.tsx
+new file mode 100644
+index 0000000..03223fb
+--- /dev/null
++++ b/src/widgets/inline-ticket/inline-ticket.test.tsx
+@@ -0,0 +1,73 @@
++import { render, screen } from '@testing-library/react'
++import { describe, expect, it } from 'vitest'
++
++import CaretDownIcon from '#/assets/components/caret-down-icon'
++import CaretUpIcon from '#/assets/components/caret-up-icon'
++
++import { ERROR_TEXT } from './accessibility'
++import { InlineTicket } from './inline-ticket'
++import { examples } from './inline-ticket.examples'
++import { PayloadDataSchema } from './inline-ticket.schema'
++import Styles from './inline-ticket.module.css'
++
++const getExample = (name: string) => {
++    const example = examples.find((item) => item.name === name)
++
++    if (!example) {
++        throw new Error(`Пример ${name} не найден`)
++    }
++
++    return example.params
++}
++
++// Контур треугольника, по которому отличаем ic_16_caret_up от ic_16_caret_down
++const getIconPath = (element: Element | null) => element?.querySelector('path')?.getAttribute('d')
++
++describe('InlineTicket', () => {
++    it('все примеры проходят схему', () => {
++        examples.forEach((example) => {
++            expect(PayloadDataSchema.safeParse(example.params).success, example.name).toBe(true)
++        })
++    })
++
++    it('при росте показывает зелёное значение со стрелкой «рост»', () => {
++        const data = getExample('InlineTicketPositive')
++
++        render(<InlineTicket data={data} />)
++        const trend = screen.getByRole('img', { name: 'рост' })
++
++        expect(screen.getByText(data.text)).toBeInTheDocument()
++        expect(getIconPath(trend)).toBe(getIconPath(render(<CaretUpIcon />).container))
++        expect(trend.parentElement).toHaveClass(Styles.positive)
++        expect(trend.parentElement).toHaveTextContent('2,4%')
++    })
++
++    it('при падении показывает красное значение со стрелкой «падение»', () => {
++        render(<InlineTicket data={getExample('InlineTicketNegative')} />)
++        const trend = screen.getByRole('img', { name: 'падение' })
++
++        expect(getIconPath(trend)).toBe(getIconPath(render(<CaretDownIcon />).container))
++        expect(trend.parentElement).toHaveClass(Styles.negative)
++    })
++
++    it('без изменений показывает значение без стрелки', () => {
++        render(<InlineTicket data={getExample('InlineTicketNeutral')} />)
++
++        expect(screen.getByText('0,0%')).toBeInTheDocument()
++        expect(screen.queryByRole('img')).not.toBeInTheDocument()
++    })
++
++    it('при kind=Error показывает «Данные не пришли» вместо котировки', () => {
++        render(<InlineTicket data={getExample('InlineTicketError')} />)
++
++        expect(screen.getByText(ERROR_TEXT)).toBeInTheDocument()
++        expect(screen.queryByText('LKOH')).not.toBeInTheDocument()
++    })
++
++    it.each(['', '   ', undefined])('без значения изменения (%j) показывает «Данные не пришли»', (change?: string) => {
++        render(<InlineTicket data={{ text: 'SBER', kind: 'Positive', change }} />)
++
++        expect(screen.getByText(ERROR_TEXT)).toBeInTheDocument()
++        expect(screen.queryByRole('img', { name: 'рост' })).not.toBeInTheDocument()
++    })
++})
+diff --git a/src/widgets/inline-ticket/inline-ticket.tsx b/src/widgets/inline-ticket/inline-ticket.tsx
+new file mode 100644
+index 0000000..c3f872a
+--- /dev/null
++++ b/src/widgets/inline-ticket/inline-ticket.tsx
+@@ -0,0 +1,52 @@
++import clsx from 'clsx'
++import { WarningIcon } from '@sbol/asdk-icons'
++
++import TrendIcon from '#/assets/components/trend-icon'
++import { InlineElement, InlineIcon } from '#/parts/inline-element'
++import { widget, type Widget } from '#/system'
++
++import { ERROR_TEXT, getTrendLabel } from './accessibility'
++import Styles from './inline-ticket.module.css'
++import { type PayloadData, type TicketKind } from './inline-ticket.schema'
++
++type ChangeKind = Exclude<TicketKind, 'Error'>
++
++const CHANGE_CLASS_NAME: Record<ChangeKind, string | undefined> = {
++    Neutral: undefined,
++    Positive: Styles.positive,
++    Negative: Styles.negative
++}
++
++// Без значения изменения котировку показать нельзя — это то же состояние, что и Error
++const resolveTicketKind = (data: PayloadData): TicketKind =>
++    data.kind === 'Error' || !data.change?.trim() ? 'Error' : (data.kind ?? 'Neutral')
++
++export const InlineTicket: Widget<PayloadData> = ({ data }) => {
++    const kind = resolveTicketKind(data)
++
++    if (kind === 'Error') {
++        return <InlineElement text={ERROR_TEXT} leading={<WarningIcon />} className={Styles.error} />
++    }
++
++    const trendLabel = getTrendLabel(kind)
++    const trailing = (
++        <span className={clsx(Styles.change, CHANGE_CLASS_NAME[kind])}>
++            {trendLabel ? (
++                <span role="img" aria-label={trendLabel} className={Styles.trend}>
++                    <TrendIcon direction={kind === 'Positive' ? 'up' : 'down'} aria-hidden="true" focusable="false" />
++                </span>
++            ) : null}
++            {data.change}
++        </span>
++    )
++
++    return (
++        <InlineElement
++            text={data.text}
++            leading={data.icon ? <InlineIcon icon={data.icon} /> : undefined}
++            trailing={trailing}
++        />
++    )
++}
++
++export default widget(InlineTicket, { withModule: false, wrapperElement: 'span' })
+diff --git a/src/widgets/inline/inline.schema.ts b/src/widgets/inline/inline.schema.ts
+index 6d27a33..8c6a23b 100644
+--- a/src/widgets/inline/inline.schema.ts
++++ b/src/widgets/inline/inline.schema.ts
+@@ -1,59 +1,11 @@
+ import { z } from 'zod'
+ 
++import { InlineActionSchema } from '#/parts/inline-element/inline-element.schema'
+ import { SYSTEM_ICON_NAMES } from '#/parts/system-icon/icon-registry'
+ 
+-const ArbitraryObjectSchema = z.object({}).passthrough()
+-
+-const MessageAction = z.object({
+-    type: z.literal('message'),
+-    payload: z.object({
+-        text: z.string().describe('Текст сообщения, которое будет отправлено в чат'),
+-        content: z.string().optional().nullable().describe('Опциональный content для function_results')
+-    })
+-})
+-
+-const LegacySendMessageAction = z.object({
+-    type: z.literal('sendMessage'),
+-    payload: z.object({
+-        text: z.string().describe('Текст сообщения, которое будет отправлено в чат'),
+-        content: z.string().optional().nullable().describe('Опциональный content для function_results')
+-    })
+-})
+-
+-const DeeplinkAction = z.object({
+-    type: z.literal('deeplink'),
+-    payload: z.object({
+-        url: z.string().describe('URL или deeplink для открытия')
+-    })
+-})
+-
+-const ExternalMethodAction = z.object({
+-    type: z.literal('externalMethod'),
+-    payload: z.object({
+-        externalMethodSettings: z.object({
+-            methodName: z.string().describe('Название внешнего метода'),
+-            methodParams: ArbitraryObjectSchema.describe('Параметры внешнего метода'),
+-            callbackType: z
+-                .enum([
+-                    'none',
+-                    'message',
+-                    'deeplink',
+-                    'externalMethod',
+-                    'sendMessage'
+-                ])
+-                .optional()
+-                .default('none')
+-                .describe('Тип callback-действия после выполнения внешнего метода')
+-        })
+-    })
+-})
+-
+-export const InlineActionSchema = z.discriminatedUnion('type', [
+-    MessageAction,
+-    LegacySendMessageAction,
+-    DeeplinkAction,
+-    ExternalMethodAction
+-])
++// Схема action общая для inline-виджетов и живёт в parts/inline-element
++export { InlineActionSchema }
++export type { InlineAction } from '#/parts/inline-element/inline-element.schema'
+ 
+ const IconByUrl = z.object({
+     type: z.literal('url'),
+@@ -83,5 +35,4 @@ export const PayloadDataSchema = z
+             'Для kind=Neutral при наличии action и отсутствии ticker автоматически показывает нижнюю линию.'
+     )
+ 
+-export type InlineAction = z.infer<typeof InlineActionSchema>
+ export type PayloadData = z.infer<typeof PayloadDataSchema>
+diff --git a/src/widgets/inline/inline.test.tsx b/src/widgets/inline/inline.test.tsx
+index 25e6b2d..16ea5b3 100644
+--- a/src/widgets/inline/inline.test.tsx
++++ b/src/widgets/inline/inline.test.tsx
+@@ -2,7 +2,7 @@ import { fireEvent, render } from '@testing-library/react'
+ import { describe, expect, it } from 'vitest'
+ 
+ import Inline from './inline'
+-import { normalizeInlineAction } from './inline.actions'
++import { normalizeInlineAction } from '#/parts/inline-element/inline-action'
+ import { examples } from './inline.examples'
+ import { InlineActionSchema, type InlineAction } from './inline.schema'
+ 
+@@ -65,7 +65,7 @@ describe('normalizeInlineAction', () => {
+             }
+         }
+ 
+-        expect(normalizeInlineAction(action)).toEqual({
++        expect(normalizeInlineAction(action, { from: 'inline' })).toEqual({
+             type: 'message',
+             from: 'inline',
+             payload: action.payload
+@@ -80,7 +80,7 @@ describe('normalizeInlineAction', () => {
+             }
+         }
+ 
+-        expect(normalizeInlineAction(action)).toEqual({
++        expect(normalizeInlineAction(action, { from: 'inline' })).toEqual({
+             type: 'deeplink',
+             from: 'inline',
+             payload: action.payload
+@@ -98,7 +98,7 @@ describe('normalizeInlineAction', () => {
+             }
+         } as InlineAction
+ 
+-        expect(normalizeInlineAction(action)).toEqual({
++        expect(normalizeInlineAction(action, { from: 'inline' })).toEqual({
+             type: 'externalMethod',
+             from: 'inline',
+             payload: {
+@@ -123,7 +123,7 @@ describe('normalizeInlineAction', () => {
+             }
+         }
+ 
+-        expect(normalizeInlineAction(action)).toEqual({
++        expect(normalizeInlineAction(action, { from: 'inline' })).toEqual({
+             type: 'externalMethod',
+             from: 'inline',
+             payload: {
+diff --git a/src/widgets/inline/inline.tsx b/src/widgets/inline/inline.tsx
+index b7fe5d1..601a22f 100644
+--- a/src/widgets/inline/inline.tsx
++++ b/src/widgets/inline/inline.tsx
+@@ -12,7 +12,7 @@ import {
+ import { useWidgetActive, useSystemActions } from '#/hooks'
+ import { IconLoader, getSystemIconComponent, type SystemIconNames } from '#/parts'
+ import { widget, type Widget } from '#/system'
+-import { normalizeInlineAction } from './inline.actions'
++import { normalizeInlineAction } from '#/parts/inline-element/inline-action'
+ import OldStyles from './inline.module.css'
+ import NewStyles from './inline.new.module.css'
+ import { type InlineAction, type PayloadData } from './inline.schema'
+@@ -93,7 +93,7 @@ const Inline: Widget<PayloadData> = ({ data }) => {
+ 
+     const handleClick = useCallback(() => {
+         if (data.action && isWidgetActive && !loading) {
+-            void systemAction(normalizeInlineAction(data.action))
++            void systemAction(normalizeInlineAction(data.action, { from: 'inline' }))
+         }
+     }, [data.action, isWidgetActive, loading, systemAction])
+ 
+diff --git a/src/widgets/link/CHANGELOG.md b/src/widgets/link/CHANGELOG.md
+new file mode 100644
+index 0000000..95d45b2
+--- /dev/null
++++ b/src/widgets/link/CHANGELOG.md
+@@ -0,0 +1,21 @@
++# История изменений
++
++## Добавили действие по нажатию на ссылку
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++Новое опциональное поле `action` переопределяет переход по `url`: по нажатию можно отправить сообщение в чат (`message`), открыть другой диплинк (`deeplink`) или вызвать метод хоста (`externalMethod`). Контракт `action` общий с виджетами `inline` и `send-message`. Без `action` ссылка, как и раньше, открывает `url`.
++
++## Добавили виджет Link
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++Новый inline-виджет для ссылки внутри текста ответа. Показывает иконку слева (по умолчанию стрелка ↗, либо логотип по URL или системная иконка) и текст с прямым подчёркиванием по макету. По нажатию открывает URL или диплинк; при наведении и нажатии ссылка становится полупрозрачной.
+diff --git a/src/widgets/link/README.md b/src/widgets/link/README.md
+new file mode 100644
+index 0000000..e5a6c45
+--- /dev/null
++++ b/src/widgets/link/README.md
+@@ -0,0 +1,70 @@
++# Link
++
++Link — ссылка внутри текста ответа: иконка слева и текст с подчёркиванием. По нажатию открывает веб-страницу или экран приложения.
++
++Виджет построен на общей основе inline-виджетов [`inline-element`](../../parts/inline-element/). Иконка слева стоит в отдельной колонке: при переносе строки выравниваются по началу текста, а не уходят под иконку.
++
++## Рендер внутри текста
++
++Чтобы виджет отрисовался внутри текстового потока, в `payload` нужно передать `display: "inline"`.
++
++```json
++{
++    "type": "widget",
++    "widget_name": "link",
++    "widget_version": 1,
++    "payload": {
++        "shimmer_size": "S",
++        "display": "inline",
++        "data": {
++            "text": "Рейтинг",
++            "url": "https://www.banki.ru/banks/ratings/"
++        }
++    }
++}
++```
++
++## Иконка слева
++
++- Без поля `icon` показывается стрелка ↗.
++- `icon.type = "url"` — картинка по URL, например логотип сервиса. Отображается кругом 16×16.
++- `icon.type = "name"` — системная иконка по имени.
++
++Если картинка не загрузилась, показывается `ImageErrorIcon`.
++
++## Действие
++
++По умолчанию нажатие открывает `url`. Опциональное поле `action` переопределяет переход — это общий контракт inline-виджетов (`inline`, `link`, `send-message`) из [`inline-element`](../../parts/inline-element/inline-element.schema.ts):
++
++- `message` — отправить сообщение в чат от имени пользователя с `inputType: "widget"`; `content` уходит агенту в `function_results`;
++- `deeplink` — открыть URL или диплинк;
++- `externalMethod` — вызвать метод хоста, после него опционально выполнить callback (`callbackType`).
++
++```json
++{
++    "text": "открыть вклад",
++    "url": "https://www.sberbank.ru/ru/person/contributions/deposits",
++    "action": {
++        "type": "externalMethod",
++        "payload": {
++            "externalMethodSettings": {
++                "methodName": "openDepositForm",
++                "methodParams": { "productCode": "SberVklad" },
++                "callbackType": "none"
++            }
++        }
++    }
++}
++```
++
++## Поведение
++
++- Нажатие вызывает `action`, а без него — системное действие `deeplink` с полем `url`.
++- Ссылка не блокируется, когда сообщение становится неактивным: переход можно открыть и из старого ответа. Повторное нажатие игнорируется только пока выполняется предыдущий переход.
++- Состояния по макету: hover — прозрачность 64%, pressed — 78%.
++- Подчёркивание — прямая линия толщиной `--line-thickness-default` под каждой строкой текста.
++
++## Ограничения
++
++- Только новая дизайн-конфигурация (`v2_only: true`), фоллбэка на старые токены нет.
++- Виджет встраивается в текст как неразрывный блок: если текст ссылки не помещается в остаток строки, ссылка целиком переносится на новую строку и дальше переносится внутри себя.
+diff --git a/src/widgets/link/index.ts b/src/widgets/link/index.ts
+new file mode 100644
+index 0000000..3b5e0cc
+--- /dev/null
++++ b/src/widgets/link/index.ts
+@@ -0,0 +1 @@
++export { default } from './link'
+diff --git a/src/widgets/link/link.examples.ts b/src/widgets/link/link.examples.ts
+new file mode 100644
+index 0000000..50779bd
+--- /dev/null
++++ b/src/widgets/link/link.examples.ts
+@@ -0,0 +1,56 @@
++import type { StoryExample } from '#/storybook/widget-story-helpers'
++
++import type { PayloadData } from './link.schema'
++
++export const examples: StoryExample<PayloadData>[] = [
++    {
++        name: 'LinkDefault',
++        user_prompt: 'Где посмотреть рейтинг надёжности банков?',
++        notes: 'Без поля icon слева показывается стрелка ↗',
++        params: {
++            text: 'Рейтинг',
++            url: 'https://www.banki.ru/banks/ratings/'
++        }
++    },
++    {
++        name: 'LinkWithImage',
++        user_prompt: 'Где можно записаться к врачу онлайн?',
++        notes: 'Для ссылки на сервис вместо стрелки передаётся логотип картинкой по URL',
++        params: {
++            text: 'СберЗдоровье',
++            url: 'https://sberhealth.ru',
++            icon: {
++                type: 'url',
++                url: 'https://web-si20.sberbank.ru:1443/images/company_logo_small/7205_small.png'
++            }
++        }
++    },
++    {
++        name: 'LinkWithAction',
++        user_prompt: 'Как открыть вклад в приложении?',
++        notes: 'action переопределяет переход по url: по нажатию вызывается метод хоста, который открывает форму вклада',
++        params: {
++            text: 'открыть вклад',
++            url: 'https://www.sberbank.ru/ru/person/contributions/deposits',
++            action: {
++                type: 'externalMethod',
++                payload: {
++                    externalMethodSettings: {
++                        methodName: 'openDepositForm',
++                        methodParams: { productCode: 'SberVklad' },
++                        callbackType: 'none'
++                    }
++                }
++            }
++        }
++    },
++    {
++        name: 'LinkLongText',
++        user_prompt: 'Где прочитать полные условия вклада?',
++        notes: 'Длинный текст переносится на следующие строки, подчёркивание рисуется под каждой строкой',
++        params: {
++            text: 'Условия и тарифы по вкладу для новых клиентов с ежемесячной выплатой процентов',
++            url: 'https://www.sberbank.ru/ru/person/contributions/deposits'
++        }
++    }
++]
+diff --git a/src/widgets/link/link.meta.ts b/src/widgets/link/link.meta.ts
+new file mode 100644
+index 0000000..b93190c
+--- /dev/null
++++ b/src/widgets/link/link.meta.ts
+@@ -0,0 +1,43 @@
++export const widgetConfig = {
++    shimmer_size: 'S' as const,
++    namespace: 'widgetStore' as const,
++    // Версия будет обновлена при релизе
++    version: 1,
++
++    // Виджет использует только V2 дизайн и не имеет фоллбэка на старый дизайн
++    v2_only: true
++} as const
++
++export const widgetBuildMeta = {
++    pixsoLink: '',
++    agents: [
++        {
++            name: 'widgetStore',
++            version: 1,
++            environment: 'Разработка',
++            jira: ''
++        }
++    ],
++    display_description:
++        'Ссылка внутри текста ответа: стрелка ↗ или логотип слева и текст с подчёркиванием. ' +
++        'Используй, чтобы дать переход на веб-страницу или экран приложения прямо из предложения. ' +
++        'Если по нажатию нужно вызвать метод хоста или отправить сообщение, передай action.'
++} as const
++
++export const widgetDevMeta = {
++    dev_status: 'alpha',
++    documentation_link: '',
++    known_issues: ['Отрисовка виджета внутри текста сообщения поддерживается начиная с версии SDK 1.1.12.'] as string[],
++    features: []
++} as const
++
++export const widgetMeta = {
++    ...widgetConfig,
++    ...widgetBuildMeta,
++    ...widgetDevMeta
++} as const
++
++export type WidgetConfig = typeof widgetConfig
++export type WidgetBuildMeta = typeof widgetBuildMeta
++export type WidgetDevMeta = typeof widgetDevMeta
++export type WidgetMeta = typeof widgetMeta
+diff --git a/src/widgets/link/link.schema.ts b/src/widgets/link/link.schema.ts
+new file mode 100644
+index 0000000..8de36d7
+--- /dev/null
++++ b/src/widgets/link/link.schema.ts
+@@ -0,0 +1,22 @@
++import { z } from 'zod'
++
++import { InlineActionSchema, InlineIconSchema } from '#/parts/inline-element/inline-element.schema'
++
++export const PayloadDataSchema = z
++    .object({
++        text: z.string().describe('Текст ссылки внутри предложения, например «Рейтинг» или «условия вклада»'),
++        url: z.string().describe('URL страницы или диплинк экрана приложения, который откроется по нажатию'),
++        action: InlineActionSchema.optional().describe(
++            'Действие по нажатию вместо открытия url: message — отправить сообщение в чат, deeplink — открыть экран, ' +
++                'externalMethod — вызвать метод хоста. Передавай, только если простого перехода по url недостаточно'
++        ),
++        icon: InlineIconSchema.optional().describe(
++            'Иконка слева от текста. Если не передана — стрелка ↗. Для ссылки на сервис или компанию передай логотип по URL'
++        )
++    })
++    .describe(
++        'Ссылка внутри текста ответа: иконка слева и текст с подчёркиванием. ' +
++            'По нажатию открывает URL или диплинк либо выполняет action'
++    )
++
++export type PayloadData = z.infer<typeof PayloadDataSchema>
+diff --git a/src/widgets/link/link.stories.tsx b/src/widgets/link/link.stories.tsx
+new file mode 100644
+index 0000000..2bbf13e
+--- /dev/null
++++ b/src/widgets/link/link.stories.tsx
+@@ -0,0 +1,48 @@
++import type { Meta } from '@storybook/react'
++
++import {
++    buildArgTypesFromZod,
++    createFullWidgetMetaStory,
++    createStoriesFromExamples,
++    createWidgetMetaStoryWithSchema,
++    extractSchemaDescription
++} from '#/storybook'
++
++import Link from './link'
++import { examples } from './link.examples'
++import { widgetMeta } from './link.meta'
++import { PayloadDataSchema } from './link.schema'
++
++const schemaDescription = extractSchemaDescription(PayloadDataSchema)
++
++const meta = {
++    title: 'widgets/Link',
++    component: Link,
++    argTypes: buildArgTypesFromZod(PayloadDataSchema),
++    parameters: {
++        layout: 'centered',
++        docs: {
++            description: {
++                component: `[Макет в Pixso](${widgetMeta.pixsoLink})\n\n${schemaDescription}`
++            }
++        }
++    }
++} satisfies Meta<typeof Link>
++
++export default meta
++
++const generatedStories = createStoriesFromExamples(examples, PayloadDataSchema)
++
++export const LinkDefault = generatedStories.LinkDefault
++export const LinkWithImage = generatedStories.LinkWithImage
++export const LinkWithAction = generatedStories.LinkWithAction
++export const LinkLongText = generatedStories.LinkLongText
++
++export const WidgetMetadata = createWidgetMetaStoryWithSchema(widgetMeta, PayloadDataSchema)
++
++export const GeneratedWidgetMetaJson = createFullWidgetMetaStory({
++    toolName: 'link',
++    widgetMeta,
++    schema: PayloadDataSchema,
++    stories: Object.values(generatedStories)
++})
+diff --git a/src/widgets/link/link.test.tsx b/src/widgets/link/link.test.tsx
+new file mode 100644
+index 0000000..202b9e9
+--- /dev/null
++++ b/src/widgets/link/link.test.tsx
+@@ -0,0 +1,110 @@
++import { fireEvent, render, screen } from '@testing-library/react'
++import { beforeEach, describe, expect, it, vi } from 'vitest'
++
++import { Link } from './link'
++import { examples } from './link.examples'
++import { PayloadDataSchema } from './link.schema'
++
++const mocks = vi.hoisted(() => ({ action: vi.fn(), loading: false }))
++
++vi.mock('#/hooks', () => ({
++    useSystemActions: () => ({ action: mocks.action, loading: mocks.loading })
++}))
++
++const getExample = (name: string) => {
++    const example = examples.find((item) => item.name === name)
++
++    if (!example) {
++        throw new Error(`Пример ${name} не найден`)
++    }
++
++    return example.params
++}
++
++describe('Link', () => {
++    beforeEach(() => {
++        mocks.action.mockReset()
++        mocks.loading = false
++    })
++
++    it('все примеры проходят схему', () => {
++        examples.forEach((example) => {
++            expect(PayloadDataSchema.safeParse(example.params).success, example.name).toBe(true)
++        })
++    })
++
++    it('открывает URL по нажатию через системное действие deeplink', () => {
++        const data = getExample('LinkDefault')
++
++        render(<Link data={data} />)
++        fireEvent.click(screen.getByRole('link', { name: data.text }))
++
++        expect(mocks.action).toHaveBeenCalledTimes(1)
++        expect(mocks.action).toHaveBeenCalledWith({ type: 'deeplink', from: 'link', payload: { url: data.url } })
++    })
++
++    it('с action выполняет его вместо перехода по url', () => {
++        const data = getExample('LinkWithAction')
++
++        render(<Link data={data} />)
++        fireEvent.click(screen.getByRole('link', { name: data.text }))
++
++        expect(mocks.action).toHaveBeenCalledTimes(1)
++        expect(mocks.action).toHaveBeenCalledWith({
++            type: 'externalMethod',
++            from: 'link',
++            payload: {
++                externalMethodSettings: {
++                    methodName: 'openDepositForm',
++                    methodParams: { productCode: 'SberVklad' },
++                    callbackType: 'none'
++                }
++            }
++        })
++    })
++
++    it('action message уходит в чат с inputType widget', () => {
++        render(
++            <Link
++                data={{
++                    text: 'условия вклада',
++                    url: 'https://www.sberbank.ru/ru/person/contributions/deposits',
++                    action: { type: 'message', payload: { text: 'Расскажи об условиях вклада' } }
++                }}
++            />
++        )
++        fireEvent.click(screen.getByRole('link', { name: 'условия вклада' }))
++
++        expect(mocks.action).toHaveBeenCalledWith({
++            type: 'message',
++            from: 'link',
++            payload: { text: 'Расскажи об условиях вклада', inputType: 'widget' }
++        })
++    })
++
++    it('без icon показывает стрелку слева от текста', () => {
++        const { container } = render(<Link data={getExample('LinkDefault')} />)
++
++        expect(container.querySelector('[aria-hidden="true"] svg')).toBeInTheDocument()
++        expect(container.querySelector('img')).not.toBeInTheDocument()
++    })
++
++    it('с icon по URL показывает картинку вместо стрелки', () => {
++        const { container } = render(<Link data={getExample('LinkWithImage')} />)
++
++        expect(container.querySelector('img')).toHaveAttribute(
++            'src',
++            'https://web-si20.sberbank.ru:1443/images/company_logo_small/7205_small.png'
++        )
++    })
++
++    it('не отправляет повторный переход, пока выполняется предыдущий', () => {
++        mocks.loading = true
++        const data = getExample('LinkDefault')
++
++        render(<Link data={data} />)
++        fireEvent.click(screen.getByRole('link', { name: data.text }))
++
++        expect(mocks.action).not.toHaveBeenCalled()
++    })
++})
+diff --git a/src/widgets/link/link.tsx b/src/widgets/link/link.tsx
+new file mode 100644
+index 0000000..4b3a68b
+--- /dev/null
++++ b/src/widgets/link/link.tsx
+@@ -0,0 +1,40 @@
++import { useCallback } from 'react'
++import { ArrowTopRightIcon } from '@sbol/asdk-icons'
++
++import { useSystemActions } from '#/hooks'
++import { InlineElement, InlineIcon, normalizeInlineAction } from '#/parts/inline-element'
++import { widget, type Widget } from '#/system'
++
++import { type PayloadData } from './link.schema'
++
++// Ссылка не зависит от активности сообщения: переход можно открыть и из старого ответа
++export const Link: Widget<PayloadData> = ({ data }) => {
++    const { action, loading } = useSystemActions()
++
++    const handleClick = useCallback(() => {
++        if (loading) {
++            return
++        }
++
++        // action переопределяет переход по url
++        void action(
++            normalizeInlineAction(data.action ?? { type: 'deeplink', payload: { url: data.url } }, {
++                from: 'link',
++                inputType: 'widget'
++            })
++        )
++    }, [action, data.action, data.url, loading])
++
++    return (
++        <InlineElement
++            text={data.text}
++            leading={data.icon ? <InlineIcon icon={data.icon} /> : <ArrowTopRightIcon />}
++            underline
++            role="link"
++            disabled={loading}
++            onClick={handleClick}
++        />
++    )
++}
++
++export default widget(Link, { withModule: false, wrapperElement: 'span' })
+diff --git a/src/widgets/navigation/navigation.registry.generated.ts b/src/widgets/navigation/navigation.registry.generated.ts
+index 29b2766..444a279 100644
+--- a/src/widgets/navigation/navigation.registry.generated.ts
++++ b/src/widgets/navigation/navigation.registry.generated.ts
+@@ -20,11 +20,14 @@ export const widgetImports: Record<string, () => Promise<WidgetModule>> = {
+     'horizontal-stacked-barchart': () => import('../horizontal-stacked-barchart/horizontal-stacked-barchart'),
+     'image-card': () => import('../image-card/image-card'),
+     inline: () => import('../inline/inline'),
++    'inline-ticket': () => import('../inline-ticket/inline-ticket'),
++    link: () => import('../link/link'),
+     'list-view': () => import('../list-view/list-view'),
+     'partner-card': () => import('../partner-card/partner-card'),
+     'route-map': () => import('../route-map/route-map'),
+     'route-map-preview': () => import('../route-map-preview/route-map-preview'),
+     search: () => import('../search/search'),
++    'send-message': () => import('../send-message/send-message'),
+     stages: () => import('../stages/stages'),
+     status: () => import('../status/status'),
+     'suggestion-button-list': () => import('../suggestion-button-list/suggestion-button-list'),
+diff --git a/src/widgets/send-message/CHANGELOG.md b/src/widgets/send-message/CHANGELOG.md
+new file mode 100644
+index 0000000..f2dedf2
+--- /dev/null
++++ b/src/widgets/send-message/CHANGELOG.md
+@@ -0,0 +1,33 @@
++# История изменений
++
++## Добавили проверку активности через метод хоста
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++Новое опциональное поле `checkActive` (`methodName`, `methodParams`) спрашивает у хоста, актуально ли действие. Пока идёт запрос, действие неактивно; неактивным оно остаётся только при ответе `false` или `"false"`. Если хост не поддерживает внешние методы, метод не найден, упал или ответил непонятно, действие активно. После нажатия и завершения `action` проверка повторяется, чтобы действие погасло, если событие уже обработано.
++
++## Заменили message и content на общий action
++---
++introduced: auto
++type: feature
++breaking: payload
++deprecated: false
++---
++
++Поля `message` и `content` удалены. Действие по нажатию задаётся полем `action` — общим контрактом с виджетами `inline` и `link`: `message` (текст и `content` для агента), `deeplink` или `externalMethod`. Без `action` в чат, как и раньше, отправляется `text`. Вместо `{ "message": "...", "content": "..." }` передавайте `{ "action": { "type": "message", "payload": { "text": "...", "content": "..." } } }`.
++
++## Добавили виджет SendMessage
++---
++introduced: auto
++type: feature
++breaking: none
++deprecated: false
++---
++
++Новый inline-виджет для действия внутри текста ответа. Показывает стрелку ↳ и фразу с глаголом с прямым подчёркиванием по макету. По нажатию отправляет в чат сообщение от имени пользователя: поле `message` или, если его нет, сам текст действия.
++
++Поле `inactiveAfterSend` делает действие однократным: после нажатия оно становится серым и больше не отправляет сообщение. Так же действие выглядит, когда сообщение неактивно.
+diff --git a/src/widgets/send-message/README.md b/src/widgets/send-message/README.md
+new file mode 100644
+index 0000000..cc855bd
+--- /dev/null
++++ b/src/widgets/send-message/README.md
+@@ -0,0 +1,101 @@
++# SendMessage
++
++SendMessage — действие внутри текста ответа: стрелка ↳ и фраза с глаголом с подчёркиванием. По нажатию выполняет `action`, по умолчанию отправляет сообщение в чат от имени пользователя.
++
++Виджет построен на общей основе inline-виджетов [`inline-element`](../../parts/inline-element/). Иконка слева стоит в отдельной колонке: при переносе строки выравниваются по началу текста, а не уходят под иконку.
++
++## Рендер внутри текста
++
++Чтобы виджет отрисовался внутри текстового потока, в `payload` нужно передать `display: "inline"`.
++
++```json
++{
++    "type": "widget",
++    "widget_name": "send_message",
++    "widget_version": 1,
++    "payload": {
++        "shimmer_size": "S",
++        "display": "inline",
++        "data": {
++            "text": "проанализировать траты",
++            "action": {
++                "type": "message",
++                "payload": { "text": "Проанализируй мои траты и подскажи, где сэкономить" }
++            }
++        }
++    }
++}
++```
++
++## Текст
++
++По макету действие встраивается в предложение как глагол: «Ещё можно ↳ проанализировать траты и выбрать, где сэкономить». Поле `text` — видимая фраза. Если `action` не передан, в чат отправляется сам `text`.
++
++## Действие
++
++`action` — общий контракт inline-виджетов (`inline`, `link`, `send-message`) из [`inline-element`](../../parts/inline-element/inline-element.schema.ts):
++
++- `message` — отправить сообщение в чат от имени пользователя. Уходит с `inputType: "widget"`, имя `send_message` попадает в `function_results`, `content` передаёт агенту скрытые данные;
++- `deeplink` — открыть URL или диплинк;
++- `externalMethod` — вызвать метод хоста, после него опционально выполнить callback (`callbackType`).
++
++## Проверка активности
++
++Опциональное поле `checkActive` спрашивает у хоста, актуально ли ещё действие. Это нужно, если действие привязано к событию, которое могло устареть или уже быть выполнено в другом месте.
++
++```json
++{
++    "text": "подтвердить запись",
++    "action": {
++        "type": "externalMethod",
++        "payload": {
++            "externalMethodSettings": {
++                "methodName": "confirmEvent",
++                "methodParams": { "eventId": "1234567" },
++                "callbackType": "none"
++            }
++        }
++    },
++    "checkActive": {
++        "methodName": "checkActiveId",
++        "methodParams": { "eventId": "1234567" }
++    }
++}
++```
++
++### Спецификация
++
++1. **Без `checkActive`** — действие активно сразу, хост не вызывается.
++2. **Хост не поддерживает внешние методы** (нет `getExternalMethod` в контексте) — действие активно сразу, без запроса.
++3. **Проверка при монтировании.** Виджет вызывает `getExternalMethod(methodName)` и затем метод с `methodParams` (без них — с пустым объектом). Пока запрос выполняется, действие неактивно: серое и не нажимается.
++4. **Разбор ответа:**
++
++   | Ответ метода | Результат |
++   |---|---|
++   | `true`, `"true"`, `" TRUE "` | активно |
++   | `false`, `"false"`, `" False "` | неактивно |
++   | `undefined`, `null`, другая строка, число, объект | активно |
++   | метод не найден или выбросил ошибку | активно, ошибка пишется в консоль |
++
++   Неактивным действие становится только при явном `false`: строки сравниваются без учёта регистра и пробелов по краям.
++5. **После нажатия.** Виджет выполняет `action` и ждёт его завершения (для `externalMethod` — ответа метода и callback). Затем запускает проверку заново: на время запроса действие снова неактивно, по ответу активируется или остаётся неактивным.
++6. **С `inactiveAfterSend: true`** повторная проверка после нажатия не выполняется: действие уже выключено навсегда.
++7. **Сообщение неактивно** (`isActive: false` от хоста) — проверка не запускается, действие неактивно. Если хост снова сделает сообщение активным, проверка выполнится заново.
++8. **Гонки.** Применяется только ответ последнего запроса: ответ устаревшей проверки или проверки после размонтирования игнорируется.
++
++## Неактивное состояние
++
++Действие становится серым и перестаёт срабатывать, если:
++
++- хост пометил сообщение неактивным (`isActive: false`);
++- передан `inactiveAfterSend: true` и действие уже нажато;
++- передан `checkActive` и проверка ещё идёт или хост ответил `false`.
++
++`inactiveAfterSend` используйте для однократных действий, чтобы избежать дублирования запроса и ошибок при повторном нажатии.
++
++> **Состояние `inactiveAfterSend` НЕ СОХРАНЯЕТСЯ НИГДЕ.** Оно живёт только в смонтированном виджете: после перезахода в чат действие снова станет активным. Чтобы неактивность сохранялась, используйте `checkActive` — `externalMethod` своего API в web/iOS/Android, который вернёт `false` для уже выполненного действия. `checkActive` спрашивает хост при каждом монтировании.
++
++## Ограничения
++
++- Только новая дизайн-конфигурация (`v2_only: true`), фоллбэка на старые токены нет.
++- Виджет встраивается в текст как неразрывный блок: если фраза не помещается в остаток строки, она целиком переносится на новую строку и дальше переносится внутри себя.
+diff --git a/src/widgets/send-message/hooks/use-check-active.test.ts b/src/widgets/send-message/hooks/use-check-active.test.ts
+new file mode 100644
+index 0000000..8c30f9f
+--- /dev/null
++++ b/src/widgets/send-message/hooks/use-check-active.test.ts
+@@ -0,0 +1,105 @@
++import { act, renderHook, waitFor } from '@testing-library/react'
++import { beforeEach, describe, expect, it, vi } from 'vitest'
++
++import { parseCheckActiveResponse, useCheckActive } from './use-check-active'
++
++const mocks = vi.hoisted(() => ({ getExternalMethod: null as unknown }))
++
++vi.mock('#/hooks', () => ({
++    useGetExternalMethod: () => mocks.getExternalMethod
++}))
++
++const CHECK_ACTIVE = { methodName: 'checkActiveId', methodParams: { eventId: '1234567' } }
++
++const createDeferred = <T>() => {
++    let resolve: (value: T) => void = () => undefined
++    const promise = new Promise<T>((res) => {
++        resolve = res
++    })
++
++    return { promise, resolve }
++}
++
++describe('parseCheckActiveResponse', () => {
++    it.each([
++        [true, true],
++        [false, false],
++        ['true', true],
++        ['false', false],
++        [' FALSE ', false],
++        ['False', false],
++        [' True ', true]
++    ])('ответ %j → %s', (response, expected) => {
++        expect(parseCheckActiveResponse(response)).toBe(expected)
++    })
++
++    it.each([[undefined], [null], [''], ['да'], [0], [1], [{ isActive: false }]])(
++        'пустой или непонятный ответ %j считается активным',
++        (response) => {
++            expect(parseCheckActiveResponse(response)).toBe(true)
++        }
++    )
++})
++
++describe('useCheckActive', () => {
++    beforeEach(() => {
++        mocks.getExternalMethod = null
++    })
++
++    it('без getExternalMethod сразу активен и не ждёт проверки', () => {
++        const { result } = renderHook(() => useCheckActive(CHECK_ACTIVE))
++
++        expect(result.current.status).toBe('active')
++    })
++
++    it('при enabled=false не вызывает метод', () => {
++        mocks.getExternalMethod = vi.fn()
++
++        renderHook(() => useCheckActive(CHECK_ACTIVE, false))
++
++        expect(mocks.getExternalMethod).not.toHaveBeenCalled()
++    })
++
++    it('не перезапускает проверку, если хост отдал новую функцию getExternalMethod', async () => {
++        const method = vi.fn(async () => true)
++
++        mocks.getExternalMethod = vi.fn(async () => method)
++
++        const { result, rerender } = renderHook(() => useCheckActive(CHECK_ACTIVE))
++
++        await waitFor(() => expect(result.current.status).toBe('active'))
++
++        mocks.getExternalMethod = vi.fn(async () => method)
++        rerender()
++
++        expect(result.current.status).toBe('active')
++        expect(method).toHaveBeenCalledTimes(1)
++    })
++
++    it('применяет только ответ последнего запроса', async () => {
++        const first = createDeferred<unknown>()
++        const second = createDeferred<unknown>()
++        const method = vi.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
++
++        mocks.getExternalMethod = vi.fn(async () => method)
++
++        const { result } = renderHook(() => useCheckActive(CHECK_ACTIVE))
++
++        await waitFor(() => expect(method).toHaveBeenCalledTimes(1))
++
++        act(() => {
++            void result.current.recheck()
++        })
++        await waitFor(() => expect(method).toHaveBeenCalledTimes(2))
++
++        // Свежий ответ приходит раньше устаревшего
++        await act(async () => {
++            second.resolve(true)
++        })
++        await act(async () => {
++            first.resolve(false)
++        })
++
++        expect(result.current.status).toBe('active')
++    })
++})
+diff --git a/src/widgets/send-message/hooks/use-check-active.ts b/src/widgets/send-message/hooks/use-check-active.ts
+new file mode 100644
+index 0000000..34eb776
+--- /dev/null
++++ b/src/widgets/send-message/hooks/use-check-active.ts
+@@ -0,0 +1,100 @@
++/* eslint-disable no-console */
++import { useCallback, useEffect, useRef, useState } from 'react'
++
++import { useGetExternalMethod } from '#/hooks'
++
++import { type CheckActive } from '../send-message.schema'
++
++/**
++ * Состояние проверки активности:
++ * - `checking` — запрос к внешнему методу ещё выполняется, действие неактивно;
++ * - `active` — хост разрешил действие или проверить его не удалось;
++ * - `inactive` — хост ответил false.
++ */
++export type CheckActiveStatus = 'checking' | 'active' | 'inactive'
++
++/**
++ * Приводит ответ внешнего метода к признаку активности.
++ * Хост может вернуть boolean или строку "true"/"false". Неактивным действие становится
++ * только при явном false: пустой или непонятный ответ считается активным.
++ */
++export const parseCheckActiveResponse = (response: unknown): boolean => {
++    if (typeof response === 'boolean') {
++        return response
++    }
++
++    if (typeof response === 'string') {
++        return response.trim().toLowerCase() !== 'false'
++    }
++
++    return true
++}
++
++/**
++ * Проверяет через внешний метод хоста, активно ли действие.
++ * Без `checkActive` или без getExternalMethod действие активно сразу, без запроса.
++ * Проверка запускается при монтировании, пока `enabled` равно true; `recheck` повторяет её вручную,
++ * например после отправки сообщения. Применяется только ответ последнего запроса.
++ */
++export const useCheckActive = (checkActive: CheckActive | undefined, enabled = true) => {
++    const getExternalMethod = useGetExternalMethod()
++    const methodName = checkActive?.methodName
++    // Параметры сравниваются по значению, чтобы новый объект с теми же данными не перезапускал проверку
++    const paramsKey = JSON.stringify(checkActive?.methodParams ?? {})
++    const hasExternalMethod = Boolean(getExternalMethod)
++    const [status, setStatus] = useState<CheckActiveStatus>(methodName && hasExternalMethod ? 'checking' : 'active')
++    const requestIdRef = useRef(0)
++    // Хост может отдавать новую функцию на каждом рендере: держим её в ref, чтобы не перезапускать проверку
++    const getExternalMethodRef = useRef(getExternalMethod)
++
++    useEffect(() => {
++        getExternalMethodRef.current = getExternalMethod
++    }, [getExternalMethod])
++
++    const recheck = useCallback(async () => {
++        const getMethod = getExternalMethodRef.current
++
++        if (!methodName || !getMethod) {
++            setStatus('active')
++            return
++        }
++
++        requestIdRef.current += 1
++        const requestId = requestIdRef.current
++        let isActive = true
++
++        setStatus('checking')
++
++        try {
++            const method = await getMethod(methodName)
++
++            if (method) {
++                isActive = parseCheckActiveResponse(await method(JSON.parse(paramsKey)))
++            } else {
++                console.error(`Внешний метод ${methodName} не найден, действие считается активным`)
++            }
++        } catch (error: unknown) {
++            console.error(error)
++        }
++
++        // Более поздний запрос или размонтирование отменяют этот ответ
++        if (requestId === requestIdRef.current) {
++            setStatus(isActive ? 'active' : 'inactive')
++        }
++    }, [methodName, paramsKey])
++
++    useEffect(() => {
++        if (!enabled) {
++            return undefined
++        }
++
++        void recheck()
++
++        return () => {
++            requestIdRef.current += 1
++        }
++        // Проверка перезапускается, если хост начал или перестал поддерживать внешние методы
++    }, [enabled, hasExternalMethod, recheck])
++
++    return { status, recheck }
++}
+diff --git a/src/widgets/send-message/index.ts b/src/widgets/send-message/index.ts
+new file mode 100644
+index 0000000..6b9796f
+--- /dev/null
++++ b/src/widgets/send-message/index.ts
+@@ -0,0 +1 @@
++export { default } from './send-message'
+diff --git a/src/widgets/send-message/send-message.examples.ts b/src/widgets/send-message/send-message.examples.ts
+new file mode 100644
+index 0000000..78c56bf
+--- /dev/null
++++ b/src/widgets/send-message/send-message.examples.ts
+@@ -0,0 +1,108 @@
++import type { StoryExample } from '#/storybook/widget-story-helpers'
++
++import type { PayloadData } from './send-message.schema'
++
++export const examples: StoryExample<PayloadData>[] = [
++    {
++        name: 'SendMessageDefault',
++        user_prompt: 'Сколько у меня бонусов Спасибо и где их лучше потратить?',
++        notes: 'Текст действия — фраза с глаголом, которая продолжает предложение ответа: «Ещё можно ↳ проанализировать траты»',
++        params: {
++            text: 'проанализировать траты',
++            action: {
++                type: 'message',
++                payload: { text: 'Проанализируй мои траты и подскажи, где сэкономить' }
++            }
++        }
++    },
++    {
++        name: 'SendMessageWithContent',
++        user_prompt: 'Хватит ли моих накоплений на первый взнос по ипотеке?',
++        notes: 'content в action message передаёт агенту скрытые данные вместе с сообщением',
++        params: {
++            text: 'включить их',
++            action: {
++                type: 'message',
++                payload: {
++                    text: 'Включи накопительный счёт в прогноз',
++                    content: '{"accountType":"savings","withdrawable":true}'
++                }
++            }
++        }
++    },
++    {
++        name: 'SendMessageTextAsMessage',
++        user_prompt: 'Хочу открыть ресторан, с чего начать?',
++        notes: 'Без поля action в чат отправляется text',
++        params: {
++            text: 'Перейти к регистрации'
++        }
++    },
++    {
++        name: 'SendMessageInactiveAfterSend',
++        user_prompt: 'Хочу открыть кофейню, что для этого нужно?',
++        notes: 'inactiveAfterSend делает действие однократным: после нажатия оно становится серым и больше не отправляет сообщение',
++        params: {
++            text: 'перейти к планированию бюджета',
++            action: {
++                type: 'message',
++                payload: { text: 'Давай спланируем бюджет открытия кофейни' }
++            },
++            inactiveAfterSend: true
++        }
++    },
++    {
++        name: 'SendMessageCheckActive',
++        user_prompt: 'Напомни, на какое мероприятие я зарегистрирован?',
++        notes:
++            'checkActive спрашивает у хоста, актуально ли событие: пока идёт запрос, действие неактивно, ' +
++            'при ответе false становится серым. После нажатия проверка повторяется',
++        params: {
++            text: 'отменить регистрацию',
++            action: {
++                type: 'message',
++                payload: { text: 'Отмени мою регистрацию на мероприятие' }
++            },
++            checkActive: {
++                methodName: 'checkActiveId',
++                methodParams: { eventId: '1234567' }
++            }
++        }
++    },
++    {
++        name: 'SendMessageExternalMethodCheckActive',
++        user_prompt: 'Подтверди мою запись к врачу на завтра',
++        notes:
++            'action externalMethod вызывает метод хоста; после его выполнения checkActive проверяется заново, ' +
++            'и если событие уже обработано, действие становится неактивным',
++        params: {
++            text: 'подтвердить запись',
++            action: {
++                type: 'externalMethod',
++                payload: {
++                    externalMethodSettings: {
++                        methodName: 'confirmEvent',
++                        methodParams: { eventId: '1234567' },
++                        callbackType: 'none'
++                    }
++                }
++            },
++            checkActive: {
++                methodName: 'checkActiveId',
++                methodParams: { eventId: '1234567' }
++            }
++        }
++    },
++    {
++        name: 'SendMessageLongText',
++        user_prompt: 'Расскажи про открытие кофейни',
++        notes: 'Длинный текст переносится на следующие строки, подчёркивание рисуется под каждой строкой',
++        params: {
++            text: 'узнать больше об открытии кофейни и требованиях к помещению',
++            action: {
++                type: 'message',
++                payload: { text: 'Расскажи подробнее об открытии кофейни и требованиях к помещению' }
++            }
++        }
++    }
++]
+diff --git a/src/widgets/send-message/send-message.meta.ts b/src/widgets/send-message/send-message.meta.ts
+new file mode 100644
+index 0000000..5ec9498
+--- /dev/null
++++ b/src/widgets/send-message/send-message.meta.ts
+@@ -0,0 +1,46 @@
++export const widgetConfig = {
++    shimmer_size: 'S' as const,
++    namespace: 'widgetStore' as const,
++    // Версия будет обновлена при релизе
++    version: 1,
++
++    // Виджет использует только V2 дизайн и не имеет фоллбэка на старый дизайн
++    v2_only: true
++} as const
++
++export const widgetBuildMeta = {
++    pixsoLink: '',
++    agents: [
++        {
++            name: 'widgetStore',
++            version: 1,
++            environment: 'Разработка',
++            jira: ''
++        }
++    ],
++    display_description:
++        'Действие внутри текста ответа: стрелка ↳ и фраза с глаголом с подчёркиванием. ' +
++        'По нажатию выполняет action, по умолчанию отправляет text в чат от имени пользователя. ' +
++        'Используй, чтобы предложить следующий шаг прямо в предложении, например «могу ↳ пересчитать прогноз». ' +
++        'Для однократных действий передавай inactiveAfterSend: true, но оно не сохраняется после перезахода в чат. ' +
++        'Чтобы неактивность сохранялась или если действие привязано к событию, которое может устареть, ' +
++        'передай checkActive с методом проверки хоста.'
++} as const
++
++export const widgetDevMeta = {
++    dev_status: 'alpha',
++    documentation_link: '',
++    known_issues: ['Отрисовка виджета внутри текста сообщения поддерживается начиная с версии SDK 1.1.12.'] as string[],
++    features: []
++} as const
++
++export const widgetMeta = {
++    ...widgetConfig,
++    ...widgetBuildMeta,
++    ...widgetDevMeta
++} as const
++
++export type WidgetConfig = typeof widgetConfig
++export type WidgetBuildMeta = typeof widgetBuildMeta
++export type WidgetDevMeta = typeof widgetDevMeta
++export type WidgetMeta = typeof widgetMeta
+diff --git a/src/widgets/send-message/send-message.module.css b/src/widgets/send-message/send-message.module.css
+new file mode 100644
+index 0000000..647dcbd
+--- /dev/null
++++ b/src/widgets/send-message/send-message.module.css
+@@ -0,0 +1,6 @@
++/* Неактивное состояние по макету: действие уже выполнено или сообщение устарело */
++.inactive {
++    --inline-element-text-color: var(--color-text-standard-general-tertiary);
++    --inline-element-leading-color: var(--color-icon-standard-general-tertiary);
++    --inline-element-line-color: var(--color-stroke-standard-general-primary);
++}
+diff --git a/src/widgets/send-message/send-message.schema.ts b/src/widgets/send-message/send-message.schema.ts
+new file mode 100644
+index 0000000..a79dacc
+--- /dev/null
++++ b/src/widgets/send-message/send-message.schema.ts
+@@ -0,0 +1,59 @@
++import { z } from 'zod'
++
++import { InlineActionSchema } from '#/parts/inline-element/inline-element.schema'
++
++export const CheckActiveSchema = z
++    .object({
++        methodName: z
++            .string()
++            .describe('Имя внешнего метода хоста, который отвечает, можно ли ещё выполнить действие, например checkActiveId'),
++        // passthrough вместо record: additionalProperties: {} валидатор GigaChat считает нетипизированным узлом
++        methodParams: z
++            .object({})
++            .passthrough()
++            .optional()
++            .describe(
++                'Параметры внешнего метода, по которым хост находит событие, например { "eventId": "1234567" }. ' +
++                    'Если не переданы, метод вызывается с пустым объектом'
++            )
++    })
++    .describe(
++        'Проверка активности действия через внешний метод хоста. Метод возвращает true/false или строку "true"/"false". ' +
++            'Пока идёт проверка, действие неактивно. Действие становится неактивным только при ответе false; ' +
++            'если метода нет, он упал или ответ непонятен, действие активно. После выполнения action проверка повторяется'
++    )
++
++export const PayloadDataSchema = z
++    .object({
++        text: z
++            .string()
++            .describe(
++                'Текст действия внутри предложения — фраза с глаголом, например «проанализировать траты» или «перейти к регистрации»'
++            ),
++        action: InlineActionSchema.optional().describe(
++            'Действие по нажатию: message — отправить сообщение в чат от имени пользователя (content уходит агенту ' +
++                'в function_results), deeplink — открыть экран, externalMethod — вызвать метод хоста. ' +
++                'Если не передано, в чат отправляется text'
++        ),
++        inactiveAfterSend: z
++            .boolean()
++            .optional()
++            .describe(
++                'Сделать действие неактивным после первого нажатия. Используй для однократных действий, ' +
++                    'чтобы избежать дублирования запроса и ошибок при повторном нажатии. По умолчанию false. ' +
++                    'Состояние НЕ СОХРАНЯЕТСЯ НИГДЕ: после перезахода в чат действие снова станет активным. ' +
++                    'Чтобы неактивность сохранялась, используй checkActive — externalMethod своего API в web/iOS/Android, ' +
++                    'который вернёт false для уже выполненного действия'
++            ),
++        checkActive: CheckActiveSchema.optional().describe(
++            'Проверка на стороне хоста, актуально ли ещё действие. Используй, когда действие привязано к событию, ' +
++                'которое может устареть или уже быть выполнено в другом месте. Если не передано, действие активно сразу'
++        )
++    })
++    .describe(
++        'Действие внутри текста ответа: стрелка ↳ и фраза с глаголом с подчёркиванием. ' +
++            'По нажатию выполняет action, по умолчанию отправляет text в чат от имени пользователя'
++    )
++
++export type CheckActive = z.infer<typeof CheckActiveSchema>
++export type PayloadData = z.infer<typeof PayloadDataSchema>
+diff --git a/src/widgets/send-message/send-message.stories.tsx b/src/widgets/send-message/send-message.stories.tsx
+new file mode 100644
+index 0000000..2ad44c9
+--- /dev/null
++++ b/src/widgets/send-message/send-message.stories.tsx
+@@ -0,0 +1,131 @@
++import { IGetExternalMethod, type IGetExternalMethod as GetExternalMethod } from '@sbol/asdk-core'
++import type { Decorator, Meta } from '@storybook/react'
++import { useState, type ReactNode } from 'react'
++
++import {
++    buildArgTypesFromZod,
++    createFullWidgetMetaStory,
++    createStoriesFromExamples,
++    createWidgetMetaStoryWithSchema,
++    extractSchemaDescription
++} from '#/storybook'
++
++import SendMessage from './send-message'
++import { examples } from './send-message.examples'
++import { widgetMeta } from './send-message.meta'
++import { PayloadDataSchema } from './send-message.schema'
++
++const schemaDescription = extractSchemaDescription(PayloadDataSchema)
++const ExternalMethodProvider = IGetExternalMethod.context.Provider
++// Задержка ответа хоста, чтобы в Storybook было видно состояние проверки
++const HOST_RESPONSE_DELAY = 1000
++
++const wait = (delay: number): Promise<void> =>
++    new Promise((resolve) => {
++        setTimeout(resolve, delay)
++    })
++
++/**
++ * Мок хоста: checkActiveId отвечает строкой "true"/"false", как часть реальных хостов,
++ * confirmEvent обрабатывает событие, после чего оно становится неактивным
++ */
++const createHostMock = (isEventActiveInitially: boolean): GetExternalMethod => {
++    let isEventActive = isEventActiveInitially
++
++    const getExternalMethod: GetExternalMethod = async (methodName) => {
++        if (methodName === 'checkActiveId') {
++            return async () => {
++                await wait(HOST_RESPONSE_DELAY)
++
++                return String(isEventActive)
++            }
++        }
++
++        if (methodName === 'confirmEvent') {
++            return async () => {
++                await wait(HOST_RESPONSE_DELAY)
++                isEventActive = false
++
++                return undefined
++            }
++        }
++
++        return undefined
++    }
++
++    return getExternalMethod
++}
++
++const HostMock = ({ isEventActive, children }: { isEventActive: boolean; children: ReactNode }) => {
++    const [getExternalMethod] = useState(() => createHostMock(isEventActive))
++
++    return <ExternalMethodProvider value={getExternalMethod}>{children}</ExternalMethodProvider>
++}
++
++const withHostMock =
++    (isEventActive: boolean): Decorator =>
++    (Story) => (
++        <HostMock isEventActive={isEventActive}>
++            <Story />
++        </HostMock>
++    )
++
++const meta = {
++    title: 'widgets/SendMessage',
++    component: SendMessage,
++    argTypes: buildArgTypesFromZod(PayloadDataSchema),
++    parameters: {
++        layout: 'centered',
++        docs: {
++            description: {
++                component: `[Макет в Pixso](${widgetMeta.pixsoLink})\n\n${schemaDescription}`
++            }
++        }
++    }
++} satisfies Meta<typeof SendMessage>
++
++export default meta
++
++const generatedStories = createStoriesFromExamples(examples, PayloadDataSchema)
++
++export const SendMessageDefault = generatedStories.SendMessageDefault
++export const SendMessageWithContent = generatedStories.SendMessageWithContent
++export const SendMessageTextAsMessage = generatedStories.SendMessageTextAsMessage
++export const SendMessageInactiveAfterSend = generatedStories.SendMessageInactiveAfterSend
++export const SendMessageLongText = generatedStories.SendMessageLongText
++
++// Хост отвечает "true": действие неактивно на время проверки, затем активируется
++export const SendMessageCheckActive = {
++    ...generatedStories.SendMessageCheckActive,
++    decorators: [withHostMock(true)]
++}
++
++// Хост отвечает "false": событие устарело, действие остаётся неактивным
++export const SendMessageCheckActiveFalse = {
++    ...generatedStories.SendMessageCheckActive,
++    decorators: [withHostMock(false)]
++}
++
++// После confirmEvent повторная проверка возвращает "false" и действие становится неактивным
++export const SendMessageExternalMethodCheckActive = {
++    ...generatedStories.SendMessageExternalMethodCheckActive,
++    decorators: [withHostMock(true)]
++}
++
++// Неактивное состояние: сообщение устарело или действие уже выполнено
++export const SendMessageInactive = {
++    ...generatedStories.SendMessageTextAsMessage,
++    args: {
++        ...generatedStories.SendMessageTextAsMessage.args,
++        isActive: false
++    }
++}
++
++export const WidgetMetadata = createWidgetMetaStoryWithSchema(widgetMeta, PayloadDataSchema)
++
++export const GeneratedWidgetMetaJson = createFullWidgetMetaStory({
++    toolName: 'send_message',
++    widgetMeta,
++    schema: PayloadDataSchema,
++    stories: Object.values(generatedStories)
++})
+diff --git a/src/widgets/send-message/send-message.test.tsx b/src/widgets/send-message/send-message.test.tsx
+new file mode 100644
+index 0000000..87ee178
+--- /dev/null
++++ b/src/widgets/send-message/send-message.test.tsx
+@@ -0,0 +1,330 @@
++import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
++import { beforeEach, describe, expect, it, vi } from 'vitest'
++
++import { SendMessage } from './send-message'
++import { examples } from './send-message.examples'
++import { PayloadDataSchema } from './send-message.schema'
++import Styles from './send-message.module.css'
++
++const mocks = vi.hoisted(() => ({
++    action: vi.fn(),
++    hostActive: true,
++    getExternalMethod: null as unknown
++}))
++
++// Активность хоста управляется из теста, локальная блокировка работает как в useWidgetActive
++vi.mock('#/hooks', async () => {
++    const { useState } = await import('react')
++
++    return {
++        useSystemActions: () => ({ action: mocks.action, loading: false }),
++        useWidgetActive: () => {
++            const [isDisabled, setDisabled] = useState(false)
++
++            return { isActive: mocks.hostActive && !isDisabled, setDisabled }
++        },
++        useGetExternalMethod: () => mocks.getExternalMethod
++    }
++})
++
++const getExample = (name: string) => {
++    const example = examples.find((item) => item.name === name)
++
++    if (!example) {
++        throw new Error(`Пример ${name} не найден`)
++    }
++
++    return example.params
++}
++
++const createDeferred = <T,>() => {
++    let resolve: (value: T) => void = () => undefined
++    const promise = new Promise<T>((res) => {
++        resolve = res
++    })
++
++    return { promise, resolve }
++}
++
++/** Подключает мок хоста, где checkActiveId отвечает значениями по очереди */
++const mockCheckActive = (...responses: unknown[]) => {
++    const checkActiveMethod = vi.fn()
++
++    responses.forEach((response) => checkActiveMethod.mockResolvedValueOnce(response))
++    mocks.getExternalMethod = vi.fn(async (methodName: string) =>
++        methodName === 'checkActiveId' ? checkActiveMethod : undefined
++    )
++
++    return checkActiveMethod
++}
++
++describe('SendMessage', () => {
++    beforeEach(() => {
++        mocks.action.mockReset()
++        mocks.hostActive = true
++        mocks.getExternalMethod = null
++    })
++
++    it('все примеры проходят схему', () => {
++        examples.forEach((example) => {
++            expect(PayloadDataSchema.safeParse(example.params).success, example.name).toBe(true)
++        })
++    })
++
++    it('выполняет action message с content и именем виджета по нажатию', () => {
++        const data = getExample('SendMessageWithContent')
++
++        render(<SendMessage data={data} />)
++        fireEvent.click(screen.getByRole('button', { name: data.text }))
++
++        expect(mocks.action).toHaveBeenCalledWith({
++            type: 'message',
++            from: 'send_message',
++            payload: {
++                text: 'Включи накопительный счёт в прогноз',
++                content: '{"accountType":"savings","withdrawable":true}',
++                inputType: 'widget'
++            }
++        })
++    })
++
++    it('без action отправляет text', () => {
++        const data = getExample('SendMessageTextAsMessage')
++
++        render(<SendMessage data={data} />)
++        fireEvent.click(screen.getByRole('button', { name: data.text }))
++
++        expect(mocks.action).toHaveBeenCalledWith({
++            type: 'message',
++            from: 'send_message',
++            payload: { text: data.text, inputType: 'widget' }
++        })
++    })
++
++    it('выполняет action externalMethod', () => {
++        const data = getExample('SendMessageExternalMethodCheckActive')
++
++        render(<SendMessage data={{ ...data, checkActive: undefined }} />)
++        fireEvent.click(screen.getByRole('button', { name: data.text }))
++
++        expect(mocks.action).toHaveBeenCalledWith({
++            type: 'externalMethod',
++            from: 'send_message',
++            payload: {
++                externalMethodSettings: {
++                    methodName: 'confirmEvent',
++                    methodParams: { eventId: '1234567' },
++                    callbackType: 'none'
++                }
++            }
++        })
++    })
++
++    it('без inactiveAfterSend остаётся активным после отправки', () => {
++        const data = getExample('SendMessageDefault')
++
++        render(<SendMessage data={data} />)
++        const button = screen.getByRole('button', { name: data.text })
++
++        fireEvent.click(button)
++        fireEvent.click(button)
++
++        expect(mocks.action).toHaveBeenCalledTimes(2)
++        expect(button).toBeEnabled()
++    })
++
++    it('с inactiveAfterSend отправляет сообщение один раз и становится неактивным', () => {
++        const data = getExample('SendMessageInactiveAfterSend')
++
++        render(<SendMessage data={data} />)
++        const button = screen.getByRole('button', { name: data.text })
++
++        fireEvent.click(button)
++        fireEvent.click(button)
++
++        expect(mocks.action).toHaveBeenCalledTimes(1)
++        expect(button).toBeDisabled()
++        expect(button).toHaveClass(Styles.inactive)
++    })
++
++    it('с inactiveAfterSend не отправляет дубль при двух нажатиях до ре-рендера', () => {
++        const data = getExample('SendMessageInactiveAfterSend')
++
++        render(<SendMessage data={data} />)
++        const button = screen.getByRole('button', { name: data.text })
++
++        // Оба клика в одном act: обновление состояния применится только после второго
++        act(() => {
++            button.click()
++            button.click()
++        })
++
++        expect(mocks.action).toHaveBeenCalledTimes(1)
++    })
++
++    it('в неактивном сообщении не отправляет сообщение и выглядит неактивным', () => {
++        mocks.hostActive = false
++        const data = getExample('SendMessageDefault')
++
++        render(<SendMessage data={data} />)
++        const button = screen.getByRole('button', { name: data.text })
++
++        fireEvent.click(button)
++
++        expect(mocks.action).not.toHaveBeenCalled()
++        expect(button).toBeDisabled()
++        expect(button).toHaveClass(Styles.inactive)
++    })
++
++    describe('checkActive', () => {
++        it('без поддержки внешних методов активен сразу', () => {
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            expect(screen.getByRole('button', { name: data.text })).toBeEnabled()
++        })
++
++        it('неактивен, пока идёт проверка, и активируется по ответу true', async () => {
++            const deferred = createDeferred<unknown>()
++            const checkActiveMethod = vi.fn(() => deferred.promise)
++
++            mocks.getExternalMethod = vi.fn(async () => checkActiveMethod)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            expect(button).toBeDisabled()
++            expect(button).toHaveClass(Styles.inactive)
++
++            fireEvent.click(button)
++            expect(mocks.action).not.toHaveBeenCalled()
++
++            await act(async () => {
++                deferred.resolve(true)
++            })
++
++            expect(mocks.getExternalMethod).toHaveBeenCalledWith('checkActiveId')
++            expect(checkActiveMethod).toHaveBeenCalledWith({ eventId: '1234567' })
++            expect(button).toBeEnabled()
++            expect(button).not.toHaveClass(Styles.inactive)
++        })
++
++        it.each([[false], ['false'], [' FALSE ']])('становится неактивным по ответу %j', async (response) => {
++            mockCheckActive(response)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            await waitFor(() => expect(button).toHaveClass(Styles.inactive))
++            fireEvent.click(button)
++
++            expect(button).toBeDisabled()
++            expect(mocks.action).not.toHaveBeenCalled()
++        })
++
++        it.each([['true'], [undefined], [null], ['непонятно']])('активен по ответу %j', async (response) => {
++            mockCheckActive(response)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            await waitFor(() => expect(screen.getByRole('button', { name: data.text })).toBeEnabled())
++        })
++
++        it('активен, если метод не найден', async () => {
++            const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
++
++            mocks.getExternalMethod = vi.fn(async () => undefined)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            await waitFor(() => expect(screen.getByRole('button', { name: data.text })).toBeEnabled())
++            errorSpy.mockRestore()
++        })
++
++        it('активен, если метод упал', async () => {
++            const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
++
++            mocks.getExternalMethod = vi.fn(async () => vi.fn().mockRejectedValue(new Error('host error')))
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            await waitFor(() => expect(screen.getByRole('button', { name: data.text })).toBeEnabled())
++            expect(errorSpy).toHaveBeenCalled()
++            errorSpy.mockRestore()
++        })
++
++        it('после завершения action проверяет активность заново', async () => {
++            const checkActiveMethod = mockCheckActive(true, 'false')
++            const actionDeferred = createDeferred<void>()
++
++            mocks.action.mockReturnValue(actionDeferred.promise)
++            const data = getExample('SendMessageExternalMethodCheckActive')
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            await waitFor(() => expect(button).toBeEnabled())
++            fireEvent.click(button)
++
++            // Пока action не завершился, повторной проверки нет
++            expect(mocks.action).toHaveBeenCalledTimes(1)
++            expect(checkActiveMethod).toHaveBeenCalledTimes(1)
++
++            await act(async () => {
++                actionDeferred.resolve()
++            })
++
++            await waitFor(() => expect(checkActiveMethod).toHaveBeenCalledTimes(2))
++            await waitFor(() => expect(button).toHaveClass(Styles.inactive))
++            expect(button).toBeDisabled()
++        })
++
++        it('после повторной проверки с ответом true остаётся активным', async () => {
++            const checkActiveMethod = mockCheckActive(true, true)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            await waitFor(() => expect(button).toBeEnabled())
++            fireEvent.click(button)
++
++            await waitFor(() => expect(checkActiveMethod).toHaveBeenCalledTimes(2))
++            await waitFor(() => expect(button).toBeEnabled())
++        })
++
++        it('с inactiveAfterSend не проверяет активность повторно', async () => {
++            const checkActiveMethod = mockCheckActive(true, true)
++            const data = { ...getExample('SendMessageCheckActive'), inactiveAfterSend: true }
++
++            render(<SendMessage data={data} />)
++            const button = screen.getByRole('button', { name: data.text })
++
++            await waitFor(() => expect(button).toBeEnabled())
++            await act(async () => {
++                fireEvent.click(button)
++            })
++
++            expect(checkActiveMethod).toHaveBeenCalledTimes(1)
++            expect(button).toBeDisabled()
++        })
++
++        it('в неактивном сообщении не обращается к хосту', () => {
++            mocks.hostActive = false
++            const checkActiveMethod = mockCheckActive(true)
++            const data = getExample('SendMessageCheckActive')
++
++            render(<SendMessage data={data} />)
++
++            expect(mocks.getExternalMethod).not.toHaveBeenCalled()
++            expect(checkActiveMethod).not.toHaveBeenCalled()
++            expect(screen.getByRole('button', { name: data.text })).toBeDisabled()
++        })
++    })
++})
+diff --git a/src/widgets/send-message/send-message.tsx b/src/widgets/send-message/send-message.tsx
+new file mode 100644
+index 0000000..0e43f54
+--- /dev/null
++++ b/src/widgets/send-message/send-message.tsx
+@@ -0,0 +1,71 @@
++import { useCallback, useRef } from 'react'
++
++import SendMessageIcon from '#/assets/components/send-message-icon'
++import { useSystemActions, useWidgetActive } from '#/hooks'
++import { InlineElement, normalizeInlineAction } from '#/parts/inline-element'
++import { widget, type Widget } from '#/system'
++
++import { useCheckActive } from './hooks/use-check-active'
++import Styles from './send-message.module.css'
++import { type PayloadData } from './send-message.schema'
++
++export const SendMessage: Widget<PayloadData> = ({ data }) => {
++    const { action, loading } = useSystemActions()
++    const { isActive: isWidgetActive, setDisabled } = useWidgetActive()
++    // Хост проверяет активность, только пока виджет не выключен сообщением или inactiveAfterSend
++    const { status: checkStatus, recheck } = useCheckActive(data.checkActive, isWidgetActive)
++    const isActive = isWidgetActive && checkStatus === 'active'
++    // Блокирует повторную отправку сразу, не дожидаясь ре-рендера после setDisabled
++    const isSentRef = useRef(false)
++
++    const send = useCallback(async () => {
++        if (!isActive || loading || (data.inactiveAfterSend && isSentRef.current)) {
++            return
++        }
++
++        if (data.inactiveAfterSend) {
++            isSentRef.current = true
++            setDisabled(true)
++        }
++
++        await action(
++            normalizeInlineAction(data.action ?? { type: 'message', payload: { text: data.text } }, {
++                from: 'send_message',
++                inputType: 'widget'
++            })
++        )
++
++        // Действие могло изменить событие на стороне хоста: уточняем, активно ли оно теперь.
++        // С inactiveAfterSend действие уже выключено навсегда, проверка не нужна
++        if (data.checkActive && !data.inactiveAfterSend) {
++            await recheck()
++        }
++    }, [
++        action,
++        data.action,
++        data.checkActive,
++        data.inactiveAfterSend,
++        data.text,
++        isActive,
++        loading,
++        recheck,
++        setDisabled
++    ])
++
++    const handleClick = useCallback(() => {
++        void send()
++    }, [send])
++
++    return (
++        <InlineElement
++            text={data.text}
++            leading={<SendMessageIcon />}
++            underline
++            disabled={!isActive || loading}
++            className={isActive ? undefined : Styles.inactive}
++            onClick={handleClick}
++        />
++    )
++}
++
++export default widget(SendMessage, { withModule: false, wrapperElement: 'span' })
+-- 
+2.56.0.windows.2
+
