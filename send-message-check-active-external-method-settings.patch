@@ -1,0 +1,136 @@
+diff --git a/src/widgets/send-message/CHANGELOG.md b/src/widgets/send-message/CHANGELOG.md
+index f2dedf2..7ace17b 100644
+--- a/src/widgets/send-message/CHANGELOG.md
++++ b/src/widgets/send-message/CHANGELOG.md
+@@ -1,5 +1,15 @@
+ # История изменений
+ 
++## Перенесли настройки метода checkActive в externalMethodSettings
++---
++introduced: auto
++type: improvement
++breaking: payload
++deprecated: false
++---
++
++`methodName` и `methodParams` в `checkActive` переехали на уровень ниже — в `checkActive.externalMethodSettings`, в том же формате, что и у `action` типа `externalMethod`. Вместо `{ "checkActive": { "methodName": "...", "methodParams": { ... } } }` передавайте `{ "checkActive": { "externalMethodSettings": { "methodName": "...", "methodParams": { ... } } } }`. Плоский формат больше не принимается. Поведение проверки не изменилось.
++
+ ## Добавили проверку активности через метод хоста
+ ---
+ introduced: auto
+diff --git a/src/widgets/send-message/README.md b/src/widgets/send-message/README.md
+index cc855bd..e4b0b89 100644
+--- a/src/widgets/send-message/README.md
++++ b/src/widgets/send-message/README.md
+@@ -57,17 +57,21 @@ SendMessage — действие внутри текста ответа: стр
+         }
+     },
+     "checkActive": {
+-        "methodName": "checkActiveId",
+-        "methodParams": { "eventId": "1234567" }
++        "externalMethodSettings": {
++            "methodName": "checkActiveId",
++            "methodParams": { "eventId": "1234567" }
++        }
+     }
+ }
+ ```
+ 
++Настройки метода лежат в `checkActive.externalMethodSettings` — в том же формате, что и у `action` типа `externalMethod`, но без `callbackType`.
++
+ ### Спецификация
+ 
+ 1. **Без `checkActive`** — действие активно сразу, хост не вызывается.
+ 2. **Хост не поддерживает внешние методы** (нет `getExternalMethod` в контексте) — действие активно сразу, без запроса.
+-3. **Проверка при монтировании.** Виджет вызывает `getExternalMethod(methodName)` и затем метод с `methodParams` (без них — с пустым объектом). Пока запрос выполняется, действие неактивно: серое и не нажимается.
++3. **Проверка при монтировании.** Виджет вызывает `getExternalMethod(externalMethodSettings.methodName)` и затем метод с `externalMethodSettings.methodParams` (без них — с пустым объектом). Пока запрос выполняется, действие неактивно: серое и не нажимается.
+ 4. **Разбор ответа:**
+ 
+    | Ответ метода | Результат |
+diff --git a/src/widgets/send-message/hooks/use-check-active.test.ts b/src/widgets/send-message/hooks/use-check-active.test.ts
+index 8c30f9f..df0747a 100644
+--- a/src/widgets/send-message/hooks/use-check-active.test.ts
++++ b/src/widgets/send-message/hooks/use-check-active.test.ts
+@@ -9,7 +9,9 @@ vi.mock('#/hooks', () => ({
+     useGetExternalMethod: () => mocks.getExternalMethod
+ }))
+ 
+-const CHECK_ACTIVE = { methodName: 'checkActiveId', methodParams: { eventId: '1234567' } }
++const CHECK_ACTIVE = {
++    externalMethodSettings: { methodName: 'checkActiveId', methodParams: { eventId: '1234567' } }
++}
+ 
+ const createDeferred = <T>() => {
+     let resolve: (value: T) => void = () => undefined
+diff --git a/src/widgets/send-message/hooks/use-check-active.ts b/src/widgets/send-message/hooks/use-check-active.ts
+index 34eb776..ff3672c 100644
+--- a/src/widgets/send-message/hooks/use-check-active.ts
++++ b/src/widgets/send-message/hooks/use-check-active.ts
+@@ -38,9 +38,9 @@ export const parseCheckActiveResponse = (response: unknown): boolean => {
+  */
+ export const useCheckActive = (checkActive: CheckActive | undefined, enabled = true) => {
+     const getExternalMethod = useGetExternalMethod()
+-    const methodName = checkActive?.methodName
++    const methodName = checkActive?.externalMethodSettings.methodName
+     // Параметры сравниваются по значению, чтобы новый объект с теми же данными не перезапускал проверку
+-    const paramsKey = JSON.stringify(checkActive?.methodParams ?? {})
++    const paramsKey = JSON.stringify(checkActive?.externalMethodSettings.methodParams ?? {})
+     const hasExternalMethod = Boolean(getExternalMethod)
+     const [status, setStatus] = useState<CheckActiveStatus>(methodName && hasExternalMethod ? 'checking' : 'active')
+     const requestIdRef = useRef(0)
+diff --git a/src/widgets/send-message/send-message.examples.ts b/src/widgets/send-message/send-message.examples.ts
+index 78c56bf..f7fa6f3 100644
+--- a/src/widgets/send-message/send-message.examples.ts
++++ b/src/widgets/send-message/send-message.examples.ts
+@@ -64,8 +64,10 @@ export const examples: StoryExample<PayloadData>[] = [
+                 payload: { text: 'Отмени мою регистрацию на мероприятие' }
+             },
+             checkActive: {
+-                methodName: 'checkActiveId',
+-                methodParams: { eventId: '1234567' }
++                externalMethodSettings: {
++                    methodName: 'checkActiveId',
++                    methodParams: { eventId: '1234567' }
++                }
+             }
+         }
+     },
+@@ -88,8 +90,10 @@ export const examples: StoryExample<PayloadData>[] = [
+                 }
+             },
+             checkActive: {
+-                methodName: 'checkActiveId',
+-                methodParams: { eventId: '1234567' }
++                externalMethodSettings: {
++                    methodName: 'checkActiveId',
++                    methodParams: { eventId: '1234567' }
++                }
+             }
+         }
+     },
+diff --git a/src/widgets/send-message/send-message.schema.ts b/src/widgets/send-message/send-message.schema.ts
+index a79dacc..41f6e2c 100644
+--- a/src/widgets/send-message/send-message.schema.ts
++++ b/src/widgets/send-message/send-message.schema.ts
+@@ -2,7 +2,7 @@ import { z } from 'zod'
+ 
+ import { InlineActionSchema } from '#/parts/inline-element/inline-element.schema'
+ 
+-export const CheckActiveSchema = z
++const CheckActiveExternalMethodSettingsSchema = z
+     .object({
+         methodName: z
+             .string()
+@@ -17,6 +17,12 @@ export const CheckActiveSchema = z
+                     'Если не переданы, метод вызывается с пустым объектом'
+             )
+     })
++    .describe('Настройки внешнего метода хоста для проверки активности — в том же формате, что у action externalMethod')
++
++export const CheckActiveSchema = z
++    .object({
++        externalMethodSettings: CheckActiveExternalMethodSettingsSchema
++    })
+     .describe(
+         'Проверка активности действия через внешний метод хоста. Метод возвращает true/false или строку "true"/"false". ' +
+             'Пока идёт проверка, действие неактивно. Действие становится неактивным только при ответе false; ' +
