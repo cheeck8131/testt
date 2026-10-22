@@ -1,0 +1,239 @@
+diff --git a/src/widgets/send-message/CHANGELOG.md b/src/widgets/send-message/CHANGELOG.md
+index 7ace17b..f09166b 100644
+--- a/src/widgets/send-message/CHANGELOG.md
++++ b/src/widgets/send-message/CHANGELOG.md
+@@ -1,5 +1,17 @@
+ # История изменений
+ 
++## inactiveAfterSend подписывает действие на активность сообщения
++---
++introduced: auto
++type: improvement
++breaking: behavior
++deprecated: false
++---
++
++Активность сообщения от хоста (`isActive: false`, когда пользователь отправил новое сообщение и ответ ушёл в историю) теперь учитывается только при `inactiveAfterSend: true`: действие выключается по нажатию и когда сообщение уходит в историю.
++
++Без `inactiveAfterSend` активность сообщения игнорируется: действие остаётся доступным в истории чата, а если передан `checkActive`, только его ответ решает, активно ли действие. Раньше `isActive: false` от хоста выключал действие всегда, и `checkActive` в истории не вызывался.
++
+ ## Перенесли настройки метода checkActive в externalMethodSettings
+ ---
+ introduced: auto
+diff --git a/src/widgets/send-message/README.md b/src/widgets/send-message/README.md
+index e4b0b89..47423b1 100644
+--- a/src/widgets/send-message/README.md
++++ b/src/widgets/send-message/README.md
+@@ -83,21 +83,25 @@ SendMessage — действие внутри текста ответа: стр
+ 
+    Неактивным действие становится только при явном `false`: строки сравниваются без учёта регистра и пробелов по краям.
+ 5. **После нажатия.** Виджет выполняет `action` и ждёт его завершения (для `externalMethod` — ответа метода и callback). Затем запускает проверку заново: на время запроса действие снова неактивно, по ответу активируется или остаётся неактивным.
+-6. **С `inactiveAfterSend: true`** повторная проверка после нажатия не выполняется: действие уже выключено навсегда.
+-7. **Сообщение неактивно** (`isActive: false` от хоста) — проверка не запускается, действие неактивно. Если хост снова сделает сообщение активным, проверка выполнится заново.
++6. **С `inactiveAfterSend: true`** повторная проверка после нажатия не выполняется: действие уже выключено.
++7. **`isActive` хоста** учитывается только с `inactiveAfterSend: true` (см. ниже). Без него `checkActive` — единственный источник активности: проверка выполняется и для сообщения в истории, решает только ответ метода.
+ 8. **Гонки.** Применяется только ответ последнего запроса: ответ устаревшей проверки или проверки после размонтирования игнорируется.
+ 
+ ## Неактивное состояние
+ 
+-Действие становится серым и перестаёт срабатывать, если:
++Хост (ASDK) присылает `isActive: false`, как только сообщение уходит в историю — пользователь отправил новое сообщение. Учитывать это или нет, решает `inactiveAfterSend`:
+ 
+-- хост пометил сообщение неактивным (`isActive: false`);
+-- передан `inactiveAfterSend: true` и действие уже нажато;
+-- передан `checkActive` и проверка ещё идёт или хост ответил `false`.
++| `inactiveAfterSend` | `isActive` хоста | `checkActive` | Действие |
++|---|---|---|---|
++| не передан / `false` | любой | не передан | активно |
++| не передан / `false` | любой | передан | решает ответ метода |
++| `true` | `true`, ещё не нажато | не передан | активно |
++| `true` | `true`, ещё не нажато | передан | решает ответ метода |
++| `true` | `false` (история) или уже нажато | любой | неактивно, метод не вызывается |
+ 
+-`inactiveAfterSend` используйте для однократных действий, чтобы избежать дублирования запроса и ошибок при повторном нажатии.
++`inactiveAfterSend` используйте для однократных действий, чтобы избежать дублирования запроса и ошибок при повторном нажатии. Действие выключается сразу по нажатию, не дожидаясь `isActive: false` от хоста, — так повторное нажатие до прихода нового сообщения не отправит дубль.
+ 
+-> **Состояние `inactiveAfterSend` НЕ СОХРАНЯЕТСЯ НИГДЕ.** Оно живёт только в смонтированном виджете: после перезахода в чат действие снова станет активным. Чтобы неактивность сохранялась, используйте `checkActive` — `externalMethod` своего API в web/iOS/Android, который вернёт `false` для уже выполненного действия. `checkActive` спрашивает хост при каждом монтировании.
++> Выключение по нажатию живёт только в смонтированном виджете. После перезахода в чат действие из истории остаётся неактивным, только если хост снова пришлёт `isActive: false`. Чтобы неактивность гарантированно сохранялась, используйте `checkActive` — `externalMethod` своего API в web/iOS/Android, который вернёт `false` для уже выполненного действия. `checkActive` спрашивает хост при каждом монтировании.
+ 
+ ## Ограничения
+ 
+diff --git a/src/widgets/send-message/send-message.examples.ts b/src/widgets/send-message/send-message.examples.ts
+index f7fa6f3..6871313 100644
+--- a/src/widgets/send-message/send-message.examples.ts
++++ b/src/widgets/send-message/send-message.examples.ts
+@@ -41,7 +41,9 @@ export const examples: StoryExample<PayloadData>[] = [
+     {
+         name: 'SendMessageInactiveAfterSend',
+         user_prompt: 'Хочу открыть кофейню, что для этого нужно?',
+-        notes: 'inactiveAfterSend делает действие однократным: после нажатия оно становится серым и больше не отправляет сообщение',
++        notes:
++            'inactiveAfterSend подписывает действие на активность сообщения: после нажатия и когда сообщение уходит ' +
++            'в историю, действие становится серым и больше не отправляет сообщение',
+         params: {
+             text: 'перейти к планированию бюджета',
+             action: {
+diff --git a/src/widgets/send-message/send-message.meta.ts b/src/widgets/send-message/send-message.meta.ts
+index 5ec9498..99859c1 100644
+--- a/src/widgets/send-message/send-message.meta.ts
++++ b/src/widgets/send-message/send-message.meta.ts
+@@ -22,9 +22,10 @@ export const widgetBuildMeta = {
+         'Действие внутри текста ответа: стрелка ↳ и фраза с глаголом с подчёркиванием. ' +
+         'По нажатию выполняет action, по умолчанию отправляет text в чат от имени пользователя. ' +
+         'Используй, чтобы предложить следующий шаг прямо в предложении, например «могу ↳ пересчитать прогноз». ' +
+-        'Для однократных действий передавай inactiveAfterSend: true, но оно не сохраняется после перезахода в чат. ' +
+-        'Чтобы неактивность сохранялась или если действие привязано к событию, которое может устареть, ' +
+-        'передай checkActive с методом проверки хоста.'
++        'По умолчанию действие остаётся доступным и в истории чата. ' +
++        'Для однократных действий передавай inactiveAfterSend: true — действие выключится после нажатия ' +
++        'и когда сообщение уйдёт в историю. Если действие привязано к событию, которое может устареть, ' +
++        'передай checkActive с методом проверки хоста: без inactiveAfterSend активность определяет только он.'
+ } as const
+ 
+ export const widgetDevMeta = {
+diff --git a/src/widgets/send-message/send-message.schema.ts b/src/widgets/send-message/send-message.schema.ts
+index 41f6e2c..4aa66ff 100644
+--- a/src/widgets/send-message/send-message.schema.ts
++++ b/src/widgets/send-message/send-message.schema.ts
+@@ -45,15 +45,17 @@ export const PayloadDataSchema = z
+             .boolean()
+             .optional()
+             .describe(
+-                'Сделать действие неактивным после первого нажатия. Используй для однократных действий, ' +
+-                    'чтобы избежать дублирования запроса и ошибок при повторном нажатии. По умолчанию false. ' +
+-                    'Состояние НЕ СОХРАНЯЕТСЯ НИГДЕ: после перезахода в чат действие снова станет активным. ' +
+-                    'Чтобы неактивность сохранялась, используй checkActive — externalMethod своего API в web/iOS/Android, ' +
+-                    'который вернёт false для уже выполненного действия'
++                'Подписать действие на активность сообщения от хоста: действие выключается сразу после нажатия ' +
++                    'и когда сообщение уходит в историю (пользователь отправил новое сообщение). ' +
++                    'Используй для однократных действий, чтобы избежать дублирования запроса и ошибок при повторном нажатии. ' +
++                    'По умолчанию false: активность сообщения игнорируется, и действие остаётся доступным в истории, ' +
++                    'а активностью управляет только checkActive'
+             ),
+         checkActive: CheckActiveSchema.optional().describe(
+             'Проверка на стороне хоста, актуально ли ещё действие. Используй, когда действие привязано к событию, ' +
+-                'которое может устареть или уже быть выполнено в другом месте. Если не передано, действие активно сразу'
++                'которое может устареть или уже быть выполнено в другом месте. Без inactiveAfterSend это главный ' +
++                'источник активности: решает только ответ метода, даже если сообщение ушло в историю. ' +
++                'С inactiveAfterSend проверка выполняется, только пока сообщение активно. Если не передано, действие активно сразу'
+         )
+     })
+     .describe(
+diff --git a/src/widgets/send-message/send-message.stories.tsx b/src/widgets/send-message/send-message.stories.tsx
+index 2ad44c9..7a0dbb4 100644
+--- a/src/widgets/send-message/send-message.stories.tsx
++++ b/src/widgets/send-message/send-message.stories.tsx
+@@ -112,11 +112,11 @@ export const SendMessageExternalMethodCheckActive = {
+     decorators: [withHostMock(true)]
+ }
+ 
+-// Неактивное состояние: сообщение устарело или действие уже выполнено
++// Неактивное состояние: с inactiveAfterSend сообщение ушло в историю (active = false от хоста)
+ export const SendMessageInactive = {
+-    ...generatedStories.SendMessageTextAsMessage,
++    ...generatedStories.SendMessageInactiveAfterSend,
+     args: {
+-        ...generatedStories.SendMessageTextAsMessage.args,
++        ...generatedStories.SendMessageInactiveAfterSend.args,
+         isActive: false
+     }
+ }
+diff --git a/src/widgets/send-message/send-message.test.tsx b/src/widgets/send-message/send-message.test.tsx
+index 87ee178..fe26a3c 100644
+--- a/src/widgets/send-message/send-message.test.tsx
++++ b/src/widgets/send-message/send-message.test.tsx
+@@ -162,7 +162,7 @@ describe('SendMessage', () => {
+         expect(mocks.action).toHaveBeenCalledTimes(1)
+     })
+ 
+-    it('в неактивном сообщении не отправляет сообщение и выглядит неактивным', () => {
++    it('без inactiveAfterSend не зависит от active хоста: в истории действие активно', () => {
+         mocks.hostActive = false
+         const data = getExample('SendMessageDefault')
+ 
+@@ -171,11 +171,40 @@ describe('SendMessage', () => {
+ 
+         fireEvent.click(button)
+ 
++        expect(mocks.action).toHaveBeenCalledTimes(1)
++        expect(button).toBeEnabled()
++        expect(button).not.toHaveClass(Styles.inactive)
++    })
++
++    it('с inactiveAfterSend в неактивном сообщении не отправляет сообщение и выглядит неактивным', () => {
++        mocks.hostActive = false
++        const data = getExample('SendMessageInactiveAfterSend')
++
++        render(<SendMessage data={data} />)
++        const button = screen.getByRole('button', { name: data.text })
++
++        fireEvent.click(button)
++
+         expect(mocks.action).not.toHaveBeenCalled()
+         expect(button).toBeDisabled()
+         expect(button).toHaveClass(Styles.inactive)
+     })
+ 
++    it('с inactiveAfterSend выключается, когда хост переводит сообщение в историю', () => {
++        const data = getExample('SendMessageInactiveAfterSend')
++        const { rerender } = render(<SendMessage data={data} />)
++        const button = screen.getByRole('button', { name: data.text })
++
++        expect(button).toBeEnabled()
++
++        // Отправлено новое сообщение: хост присылает active = false
++        mocks.hostActive = false
++        rerender(<SendMessage data={{ ...data }} />)
++
++        expect(button).toBeDisabled()
++        expect(button).toHaveClass(Styles.inactive)
++    })
++
+     describe('checkActive', () => {
+         it('без поддержки внешних методов активен сразу', () => {
+             const data = getExample('SendMessageCheckActive')
+@@ -315,13 +344,24 @@ describe('SendMessage', () => {
+             expect(button).toBeDisabled()
+         })
+ 
+-        it('в неактивном сообщении не обращается к хосту', () => {
++        it('без inactiveAfterSend решает checkActive, даже если хост прислал active = false', async () => {
+             mocks.hostActive = false
+             const checkActiveMethod = mockCheckActive(true)
+             const data = getExample('SendMessageCheckActive')
+ 
+             render(<SendMessage data={data} />)
+ 
++            await waitFor(() => expect(screen.getByRole('button', { name: data.text })).toBeEnabled())
++            expect(checkActiveMethod).toHaveBeenCalledTimes(1)
++        })
++
++        it('с inactiveAfterSend в неактивном сообщении не обращается к хосту', () => {
++            mocks.hostActive = false
++            const checkActiveMethod = mockCheckActive(true)
++            const data = { ...getExample('SendMessageCheckActive'), inactiveAfterSend: true }
++
++            render(<SendMessage data={data} />)
++
+             expect(mocks.getExternalMethod).not.toHaveBeenCalled()
+             expect(checkActiveMethod).not.toHaveBeenCalled()
+             expect(screen.getByRole('button', { name: data.text })).toBeDisabled()
+diff --git a/src/widgets/send-message/send-message.tsx b/src/widgets/send-message/send-message.tsx
+index 0e43f54..7c2835c 100644
+--- a/src/widgets/send-message/send-message.tsx
++++ b/src/widgets/send-message/send-message.tsx
+@@ -12,9 +12,11 @@ import { type PayloadData } from './send-message.schema'
+ export const SendMessage: Widget<PayloadData> = ({ data }) => {
+     const { action, loading } = useSystemActions()
+     const { isActive: isWidgetActive, setDisabled } = useWidgetActive()
+-    // Хост проверяет активность, только пока виджет не выключен сообщением или inactiveAfterSend
+-    const { status: checkStatus, recheck } = useCheckActive(data.checkActive, isWidgetActive)
+-    const isActive = isWidgetActive && checkStatus === 'active'
++    // inactiveAfterSend подписывает действие на active хоста: сообщение ушло в историю — действие выключено.
++    // Без inactiveAfterSend active хоста игнорируется, и активность определяет только checkActive
++    const isHostGateOpen = data.inactiveAfterSend ? isWidgetActive : true
++    const { status: checkStatus, recheck } = useCheckActive(data.checkActive, isHostGateOpen)
++    const isActive = isHostGateOpen && checkStatus === 'active'
+     // Блокирует повторную отправку сразу, не дожидаясь ре-рендера после setDisabled
+     const isSentRef = useRef(false)
+ 
